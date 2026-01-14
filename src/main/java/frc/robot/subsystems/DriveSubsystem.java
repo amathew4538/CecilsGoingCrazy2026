@@ -2,11 +2,18 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import static edu.wpi.first.wpilibj.DoubleSolenoid.Value.kReverse;
+
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
+
+import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 
 public class DriveSubsystem extends SubsystemBase {
   private final SparkMax m_leftLeader = new SparkMax(4, MotorType.kBrushless);
@@ -14,11 +21,10 @@ public class DriveSubsystem extends SubsystemBase {
   private final SparkMax m_rightLeader = new SparkMax(2, MotorType.kBrushless);
   private final SparkMax m_rightFollower = new SparkMax(1, MotorType.kBrushless);
 
-  
   public DriveSubsystem() {
     SparkMaxConfig leftConfig = new SparkMaxConfig();
     SparkMaxConfig rightConfig = new SparkMaxConfig();
-    
+
     // Configure followers to follow their respective leaders
     leftConfig.follow(4);
     rightConfig.follow(2);
