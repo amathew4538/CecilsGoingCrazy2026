@@ -4,10 +4,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import static edu.wpi.first.wpilibj.DoubleSolenoid.Value.kForward;
 import static edu.wpi.first.wpilibj.DoubleSolenoid.Value.kReverse;
-
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticHub;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 
 public class Pneumatics extends SubsystemBase {
     private final PneumaticHub m_pneumaticHub = new PneumaticHub(5);
@@ -29,10 +27,15 @@ public class Pneumatics extends SubsystemBase {
     }
 
     public Command toggleSolenoids() {
-        return this.runOnce(() -> {
-            Value targetValue = (m_solenoidLeft.get() == kForward) ? kReverse : kForward;
-            m_solenoidLeft.set(targetValue);
-            m_solenoidRight.set(targetValue);
-        });
+        if (m_solenoidLeft.get() == kReverse)
+            return this.runOnce(() -> {
+                m_solenoidLeft.set(kForward);
+                m_solenoidRight.set(kForward);
+            });
+        else
+            return this.runOnce(() -> {
+                m_solenoidLeft.set(kReverse);
+                m_solenoidRight.set(kReverse);
+            });
     }
 }
