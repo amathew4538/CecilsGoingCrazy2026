@@ -6,23 +6,23 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkMaxConfig; //C: this is mass importation
 public class DriveSubsystem extends SubsystemBase {
-  private final SparkMax m_leftLeader = new SparkMax(4, MotorType.kBrushless);
-  private final SparkMax m_leftFollower = new SparkMax(3, MotorType.kBrushless);
-  private final SparkMax m_rightLeader = new SparkMax(2, MotorType.kBrushless);
-  private final SparkMax m_rightFollower = new SparkMax(1, MotorType.kBrushless);
+  private final SparkMax m_leftLeader = new SparkMax(4, MotorType.kBrushless); //C: defines sparkmax 4 as front left, as a leader to let us know it's meant to receive input
+  private final SparkMax m_leftFollower = new SparkMax(3, MotorType.kBrushless); //C: defines sparkmax 3 as back left, as a follower to let us know it matches its leaders' input
+  private final SparkMax m_rightLeader = new SparkMax(2, MotorType.kBrushless); //C: ditto of line 11 but for the right and uses sparkmax 2
+  private final SparkMax m_rightFollower = new SparkMax(1, MotorType.kBrushless); //C: ditto of line 12 but for the right and uses sparkmax 1
 
   public DriveSubsystem() {
-    SparkMaxConfig leftConfig = new SparkMaxConfig();
-    SparkMaxConfig rightConfig = new SparkMaxConfig();
+    SparkMaxConfig leftConfig = new SparkMaxConfig(); //C: preparing to pair the left side
+    SparkMaxConfig rightConfig = new SparkMaxConfig(); //C: ditto for right
 
     // Configure followers to follow their respective leaders
-    leftConfig.follow(4);
-    rightConfig.follow(2);
+    leftConfig.follow(4); //C: now the code recognizes CanID 4 (the m_leftLeader) as a leader
+    rightConfig.follow(2); //C: same with the right, numbers respective
     
     // Invert one side so positive power moves the robot forward
-    rightConfig.inverted(true);
+    rightConfig.inverted(true); //C: not much i can explain here when the above comment said it all already
     
     // 3. Apply configurations
     m_leftLeader.configure(new SparkMaxConfig(), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
