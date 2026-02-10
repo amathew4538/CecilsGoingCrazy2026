@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Gyroscope extends SubsystemBase{
     ADXRS450_Gyro m_gyro = new ADXRS450_Gyro();
 
-    private final ShuffleboardTab m_tab = Shuffleboard.getTab("Main");
+    private final ShuffleboardTab m_tab = Shuffleboard.getTab("Sensors");
     private final GenericEntry m_gyroEntry = m_tab.add("Angle", 0)
         .withWidget(BuiltInWidgets.kGyro)
         .withProperties(Map.of("Starting Angle", 0))

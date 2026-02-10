@@ -18,7 +18,7 @@ public class Pneumatics extends SubsystemBase {
     private final DoubleSolenoid m_solenoidLeft = m_pneumaticHub.makeDoubleSolenoid(0, 1);
     private final DoubleSolenoid m_solenoidRight = m_pneumaticHub.makeDoubleSolenoid(14, 15);
 
-    private final ShuffleboardTab m_tab = Shuffleboard.getTab("Main");
+    private final ShuffleboardTab m_tab = Shuffleboard.getTab("Pneumatics");
     
     private final GenericEntry m_compressorEntry = m_tab.add("Compressor On", false)
         .withWidget(BuiltInWidgets.kBooleanBox)
