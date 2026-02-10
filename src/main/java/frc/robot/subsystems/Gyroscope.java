@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Gyroscope extends SubsystemBase{
@@ -23,8 +24,8 @@ public class Gyroscope extends SubsystemBase{
         m_gyro.reset();
     }
 
-    public void resetHeading() {
-        m_gyro.reset();
+    public Command resetHeading() {
+       return runOnce(() -> {m_gyro.reset();});
     }
 
     public double getHeading() {

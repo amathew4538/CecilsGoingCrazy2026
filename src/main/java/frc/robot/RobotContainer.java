@@ -9,6 +9,7 @@ import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.Gyroscope;
 import frc.robot.subsystems.Pneumatics;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -28,7 +29,7 @@ public class RobotContainer {
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
   private final CommandXboxController m_Controller = new CommandXboxController(0);
   private final Pneumatics m_pneumatics = new Pneumatics();
-
+  private final Gyroscope m_Gyroscope = new Gyroscope();
 
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -63,6 +64,7 @@ public class RobotContainer {
         ))
     );
     m_Controller.rightBumper().onTrue(m_pneumatics.toggleSolenoids());
+    m_Controller.y().onTrue(m_Gyroscope.resetHeading());
   }
 
   /**
