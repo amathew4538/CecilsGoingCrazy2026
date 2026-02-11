@@ -20,11 +20,15 @@ public class Pneumatics extends SubsystemBase {
 
     private final ShuffleboardTab m_tab = Shuffleboard.getTab("Pneumatics");
 
-    private final GenericEntry m_compressorEntry = m_tab.add("Compressor On", false)
+    private final GenericEntry m_compressor = m_tab.add("Compressor On", false)
         .withWidget(BuiltInWidgets.kBooleanBox)
         .getEntry();
 
-    private final GenericEntry m_pressureFullEntry = m_tab.add("Pressure Full", false)
+    private final GenericEntry m_pressureFull = m_tab.add("Pressure Full", false)
+        .withWidget(BuiltInWidgets.kBooleanBox)
+        .getEntry();
+
+    private final GenericEntry m_gear = m_tab.add("High gear?", false)
         .withWidget(BuiltInWidgets.kBooleanBox)
         .getEntry();
 
@@ -33,12 +37,21 @@ public class Pneumatics extends SubsystemBase {
 
         m_solenoidLeft.set(kReverse);
         m_solenoidRight.set(kReverse);
+
+        m_gear.setBoolean(false);
+
+        m_tab.add("Switch Gear", toggleSolenoids())
+            .withWidget(BuiltInWidgets.kCommand)
+            .withPosition(5, 0)
+            .withSize(2, 1);
     }
 
     @Override
     public void periodic() {
-        m_compressorEntry.setBoolean(m_pneumaticHub.getCompressor());
-        m_pressureFullEntry.setBoolean(!m_pneumaticHub.getPressureSwitch());
+        m_compressor.setBoolean(m_pneumaticHub.getCompressor());
+        m_pressureFull.setBoolean(!m_pneumaticHub.getPressureSwitch());
+
+        m_gear.setBoolean(m_solenoidLeft.get() == kForward);
     }
 
     public Command toggleSolenoids() {

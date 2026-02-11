@@ -20,6 +20,11 @@ public class Gyroscope extends SubsystemBase{
         m_tab.add("Robot Heading", m_gyro)
             .withWidget(BuiltInWidgets.kGyro)
             .withProperties(Map.of("Starting angle", 0));
+
+        m_tab.add("Reset Gyro", resetHeading())
+            .withWidget(BuiltInWidgets.kCommand)
+            .withPosition(5, 0)
+            .withSize(2, 1);
     }
 
     public Command resetHeading() {
