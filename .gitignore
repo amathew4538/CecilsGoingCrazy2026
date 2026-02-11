@@ -186,3 +186,8 @@ compile_commands.json
 
 # Eclipse generated file for annotation processors
 .factorypath
+
+# Simulation GUI Settings
+simgui.json
+simgui-ds.json
+simgui-window.json
