@@ -59,8 +59,8 @@ public class RobotContainer {
 
     m_robotDrive.setDefaultCommand(
         m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
-            -m_Controller.getRightX(),
-            m_Controller.getLeftY()
+            -m_Controller.getLeftY(),
+            -m_Controller.getRightX()
         ))
     );
     m_Controller.rightBumper().onTrue(m_pneumatics.toggleSolenoids());
