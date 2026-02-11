@@ -15,6 +15,21 @@
                 "isDefault": true
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Launch QDriverStation",
+            "type": "shell",
+            "command": "open -a /Users/amathew4538/Applications/QDriverStation.app",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "group": "simulation"
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": []
         }
     ]
 }

@@ -14,7 +14,7 @@ import frc.robot.subsystems.Pneumatics;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-
+import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -27,7 +27,8 @@ public class RobotContainer {
 
 
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
-  private final CommandXboxController m_Controller = new CommandXboxController(0);
+  private final CommandXboxController m_xbox = new CommandXboxController(0);
+  private final CommandPS4Controller m_ps4 = new CommandPS4Controller(0);
   private final Pneumatics m_pneumatics = new Pneumatics();
   private final Gyroscope m_Gyroscope = new Gyroscope();
 
@@ -48,25 +49,48 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
+    m_robotDrive.setDefaultCommand(
+        m_robotDrive.run(() -> {
+            boolean isPS = m_ps4.getHID().getName().contains("Wireless");
+            
+            double speed = -m_xbox.getLeftY(); // Axis 1 is same for both
+            double rotation = isPS ? -m_ps4.getRightX() : -m_xbox.getRightX();
+
+            m_robotDrive.arcadeDrive(speed, rotation);
+        })
+    );
+
+    getTopButton().onTrue(m_Gyroscope.resetHeading());
+    getRightBumper().onTrue(m_pneumatics.toggleSolenoids());
+
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
     new Trigger(m_exampleSubsystem::exampleCondition)
         .onTrue(new ExampleCommand(m_exampleSubsystem));
 
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    m_Controller.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
-
-
-    m_robotDrive.setDefaultCommand(
-        m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
-            -m_Controller.getLeftY(),
-            -m_Controller.getRightX()
-        ))
-    );
-    m_Controller.rightBumper().onTrue(m_pneumatics.toggleSolenoids());
-    m_Controller.y().onTrue(m_Gyroscope.resetHeading());
+    getSideButton().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+    getRightBumper().onTrue(m_pneumatics.toggleSolenoids());
+    getTopButton().onTrue(m_Gyroscope.resetHeading());
+  }
+  private Trigger getTopButton() {
+    return m_ps4.getHID().getName().contains("Wireless") 
+        ? m_ps4.triangle() 
+        : m_xbox.y();
   }
 
+  /** Helper to find the "Right Bumper" regardless of controller type */
+  private Trigger getRightBumper() {
+    return m_ps4.getHID().getName().contains("Wireless") 
+        ? m_ps4.R1() 
+        : m_xbox.rightBumper();
+  }
+
+  private Trigger getSideButton() {
+    return m_ps4.getHID().getName().contains("Wireless")
+      ? m_ps4.circle()
+      : m_xbox.b();
+}
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
