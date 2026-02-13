@@ -25,11 +25,10 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
 
-
-  private final DriveSubsystem m_robotDrive = new DriveSubsystem();
   private final CommandXboxController m_Controller = new CommandXboxController(0);
   private final Pneumatics m_pneumatics = new Pneumatics();
   private final Gyroscope m_Gyroscope = new Gyroscope();
+  private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_Gyroscope);
 
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -65,6 +64,7 @@ public class RobotContainer {
     );
     m_Controller.rightBumper().onTrue(m_pneumatics.toggleSolenoids());
     m_Controller.y().onTrue(m_Gyroscope.resetHeading());
+    m_Controller.a().onTrue(m_robotDrive.turn180());
   }
 
   /**

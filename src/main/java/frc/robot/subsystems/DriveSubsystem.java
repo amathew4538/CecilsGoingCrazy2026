@@ -3,7 +3,9 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
@@ -12,14 +14,21 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig; //C: this is mass importation
 
 public class DriveSubsystem extends SubsystemBase {
+
   private final SparkMax m_leftLeader = new SparkMax(4, MotorType.kBrushless); //C: defines sparkmax 4 as front left, as a leader to let us know it's meant to receive input
   private final SparkMax m_leftFollower = new SparkMax(3, MotorType.kBrushless); //C: defines sparkmax 3 as back left, as a follower to let us know it matches its leaders' input
   private final SparkMax m_rightLeader = new SparkMax(2, MotorType.kBrushless); //C: ditto of line 11 but for the right and uses sparkmax 2
   private final SparkMax m_rightFollower = new SparkMax(1, MotorType.kBrushless); //C: ditto of line 12 but for the right and uses sparkmax 1
 
+  private Gyroscope m_gyroscope;
+
   private final DifferentialDrive m_drive = new DifferentialDrive(m_leftLeader, m_rightLeader);
 
-  public DriveSubsystem() {
+  private final PIDController m_pid = new PIDController(0.05, 0, 0);
+
+  public DriveSubsystem(Gyroscope gyro) {
+    this.m_gyroscope = gyro;
+
     SparkMaxConfig leftConfig = new SparkMaxConfig(); //C: preparing to pair the left side
     SparkMaxConfig rightLeaderConfig = new SparkMaxConfig();
     SparkMaxConfig rightConfig = new SparkMaxConfig(); //C: ditto for right
@@ -44,9 +53,30 @@ public class DriveSubsystem extends SubsystemBase {
       .withWidget(BuiltInWidgets.kDifferentialDrive)
       .withSize(4, 3)
       .withPosition(0, 0);
+
+    m_tab.add("180 PID", m_pid)
+      .withWidget(BuiltInWidgets.kPIDCommand);
+
+    m_pid.enableContinuousInput(-180, 180);
+    m_pid.setTolerance(2);
   }
 
   public void arcadeDrive(double speed, double rotation) {
     m_drive.arcadeDrive(speed, rotation);
+  }
+
+  public Command turn180(){
+    double gyroHeading = m_gyroscope.getHeading();
+    double targetHeading = gyroHeading + 180;
+
+    return this.run(() -> {
+      double rotationSpeed = m_pid.calculate(gyroHeading, targetHeading);
+
+      rotationSpeed = Math.max(-0.5, Math.min(0.5, rotationSpeed));
+
+      this.arcadeDrive(0, rotationSpeed);
+    })
+    .until(m_pid::atSetpoint)
+    .finallyDo((interrupted) -> this.arcadeDrive(0, 0));
   }
 }
