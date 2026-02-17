@@ -104,12 +104,12 @@ public class RobotContainer {
 
     m_PS4Controller.R1().onTrue(m_pneumatics.toggleSolenoids());
 
-    m_PS4Controller.triangle().onTrue(m_gyroscope.resetHeading());
-
-    m_PS4Controller.cross().onTrue(
+    m_PS4Controller.triangle().onTrue(
       m_gyroscope.resetHeading()
       .alongWith(m_robotDrive.resetSimPose())
     );
+
+    m_PS4Controller.cross().onTrue(m_robotDrive.turn180());
   }
 
   /**

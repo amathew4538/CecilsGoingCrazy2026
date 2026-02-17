@@ -116,8 +116,15 @@ public Command turn180() {
   public Command resetSimPose() {
       return runOnce(() -> {
         if (Robot.isSimulation()) {
-          m_driveSim.setPose(new edu.wpi.first.math.geometry.Pose2d());
+            var currentPose = m_driveSim.getPose();
+
+            var resetPose = new edu.wpi.first.math.geometry.Pose2d(
+                currentPose.getTranslation(), 
+                new edu.wpi.first.math.geometry.Rotation2d(0)
+            );
+
+            m_driveSim.setPose(resetPose);
         }
-      });
+    });
   }
 }
