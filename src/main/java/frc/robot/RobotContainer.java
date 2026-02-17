@@ -55,13 +55,22 @@ public class RobotContainer {
     // cancelling on release.
     m_Controller.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
 
-
-    m_robotDrive.setDefaultCommand(
-        m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
-            -m_Controller.getLeftY(),
-            -m_Controller.getRightX() * 0.5
-        ))
-    );
+    if (Robot.isSimulation()){
+      m_robotDrive.setDefaultCommand(
+          m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
+              -m_Controller.getLeftY(),
+              -m_Controller.getRightX() * 0.5
+          ))
+      );
+    }
+    else {
+      m_robotDrive.setDefaultCommand(
+          m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
+              -m_Controller.getLeftY(),
+              -m_Controller.getRightX()
+          ))
+      );
+    }
     m_Controller.rightBumper().onTrue(m_pneumatics.toggleSolenoids());
     m_Controller.y().onTrue(m_gyroscope.resetHeading());
     m_Controller.a().onTrue(m_robotDrive.turn180());
