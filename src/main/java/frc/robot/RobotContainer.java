@@ -5,13 +5,13 @@
 package frc.robot;
 
 
-import frc.robot.commands.Autos;
-import frc.robot.commands.ExampleCommand;
+// import frc.robot.commands.Autos;
 import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.Gyroscope;
 import frc.robot.subsystems.Pneumatics;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -23,9 +23,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
-
-  private final CommandXboxController m_Controller = new CommandXboxController(0);
   private final Pneumatics m_pneumatics = new Pneumatics();
   private final Gyroscope m_gyroscope = new Gyroscope();
   private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_gyroscope);
@@ -46,34 +43,73 @@ public class RobotContainer {
    * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
    * joysticks}.
    */
-  private void configureBindings() {
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-    new Trigger(m_exampleSubsystem::exampleCondition)
-        .onTrue(new ExampleCommand(m_exampleSubsystem));
 
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
-    m_Controller.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+  private void configureBindings() {
+    if (DriverStation.getJoystickIsXbox(0)) {
+        configureXboxBindings();
+    } else {
+        configurePS4Bindings();
+    }
+  }
+
+  private void configureXboxBindings() {
+    final CommandXboxController m_XboxController = new CommandXboxController(0);
 
     if (Robot.isSimulation()){
       m_robotDrive.setDefaultCommand(
           m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
-              -m_Controller.getLeftY(),
-              -m_Controller.getRightX() * 0.5
+              -m_XboxController.getLeftY(),
+              -m_XboxController.getRightX() * 0.5
           ))
       );
     }
     else {
       m_robotDrive.setDefaultCommand(
           m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
-              -m_Controller.getLeftY(),
-              -m_Controller.getRightX()
+              -m_XboxController.getLeftY(),
+              -m_XboxController.getRightX()
           ))
       );
     }
-    m_Controller.rightBumper().onTrue(m_pneumatics.toggleSolenoids());
-    m_Controller.y().onTrue(m_gyroscope.resetHeading());
-    m_Controller.a().onTrue(m_robotDrive.turn180());
+    m_XboxController.rightBumper().onTrue(m_pneumatics.toggleSolenoids());
+
+    m_XboxController.a().onTrue(m_robotDrive.turn180());
+
+    m_XboxController.y().onTrue(
+      m_gyroscope.resetHeading()
+      .alongWith(m_robotDrive.resetSimPose())
+    );
+  }
+
+  private void configurePS4Bindings() {
+    final CommandPS4Controller m_PS4Controller = new CommandPS4Controller(0);
+
+    if (Robot.isSimulation()){
+      m_robotDrive.setDefaultCommand(
+          m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
+              -m_PS4Controller.getLeftY(),
+              -m_PS4Controller.getRightX() * 0.5
+          ))
+      );
+    }
+
+    else {
+      m_robotDrive.setDefaultCommand(
+          m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
+              -m_PS4Controller.getLeftY(),
+              -m_PS4Controller.getRightX()
+          ))
+      );
+    }
+
+    m_PS4Controller.R1().onTrue(m_pneumatics.toggleSolenoids());
+
+    m_PS4Controller.triangle().onTrue(m_gyroscope.resetHeading());
+
+    m_PS4Controller.cross().onTrue(
+      m_gyroscope.resetHeading()
+      .alongWith(m_robotDrive.resetSimPose())
+    );
   }
 
   /**
@@ -83,6 +119,6 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
+    return null;
   }
 }

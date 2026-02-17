@@ -11,6 +11,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
@@ -109,5 +111,13 @@ public Command turn180() {
     m_driveSim.update(0.020);
     m_gyroscope.setSimHeading(m_driveSim.getHeading().getDegrees());
     m_Field2d.setRobotPose(m_driveSim.getPose());
+  }
+
+  public Command resetSimPose() {
+      return runOnce(() -> {
+        if (Robot.isSimulation()) {
+          m_driveSim.setPose(new edu.wpi.first.math.geometry.Pose2d());
+        }
+      });
   }
 }
