@@ -27,8 +27,8 @@ public class RobotContainer {
 
   private final CommandXboxController m_Controller = new CommandXboxController(0);
   private final Pneumatics m_pneumatics = new Pneumatics();
-  private final Gyroscope m_Gyroscope = new Gyroscope();
-  private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_Gyroscope);
+  private final Gyroscope m_gyroscope = new Gyroscope();
+  private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_gyroscope);
 
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -59,11 +59,11 @@ public class RobotContainer {
     m_robotDrive.setDefaultCommand(
         m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
             -m_Controller.getLeftY(),
-            -m_Controller.getRightX()
+            -m_Controller.getRightX() * 0.5
         ))
     );
     m_Controller.rightBumper().onTrue(m_pneumatics.toggleSolenoids());
-    m_Controller.y().onTrue(m_Gyroscope.resetHeading());
+    m_Controller.y().onTrue(m_gyroscope.resetHeading());
     m_Controller.a().onTrue(m_robotDrive.turn180());
   }
 

@@ -3,7 +3,11 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -24,7 +28,19 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final DifferentialDrive m_drive = new DifferentialDrive(m_leftLeader, m_rightLeader);
 
-  private final PIDController m_pid = new PIDController(0.05, 0, 0);
+  private final PIDController m_pid = new PIDController(0.03, 0, 0.002);
+
+  private final DifferentialDrivetrainSim m_driveSim = new DifferentialDrivetrainSim(
+    DCMotor.getNEO(2),
+    7.29,
+    2.1,
+    Units.lbsToKilograms(50),
+    Units.inchesToMeters(3),
+    0.7112,
+    null
+  );
+
+  private final edu.wpi.first.wpilibj.smartdashboard.Field2d m_Field2d = new Field2d();
 
   public DriveSubsystem(Gyroscope gyro) {
     this.m_gyroscope = gyro;
@@ -57,6 +73,11 @@ public class DriveSubsystem extends SubsystemBase {
     m_tab.add("180 PID", m_pid)
       .withWidget(BuiltInWidgets.kPIDCommand);
 
+    m_tab.add("Field", m_Field2d)
+      .withWidget(BuiltInWidgets.kField)
+      .withSize(4, 6)
+      .withPosition(4, 0);
+
     m_pid.enableContinuousInput(-180, 180);
     m_pid.setTolerance(2);
   }
@@ -65,18 +86,28 @@ public class DriveSubsystem extends SubsystemBase {
     m_drive.arcadeDrive(speed, rotation);
   }
 
-  public Command turn180(){
-    double gyroHeading = m_gyroscope.getHeading();
-    double targetHeading = gyroHeading + 180;
-
-    return this.run(() -> {
-      double rotationSpeed = m_pid.calculate(gyroHeading, targetHeading);
-
+public Command turn180() {
+  return runOnce(() -> {
+      double target = edu.wpi.first.math.MathUtil.inputModulus(m_gyroscope.getHeading() + 180, -180, 180);
+      m_pid.setSetpoint(target);
+  })
+  .andThen(
+    run(() -> {
+      double rotationSpeed = m_pid.calculate(m_gyroscope.getHeading());
       rotationSpeed = Math.max(-0.5, Math.min(0.5, rotationSpeed));
-
       this.arcadeDrive(0, rotationSpeed);
     })
-    .until(m_pid::atSetpoint)
-    .finallyDo((interrupted) -> this.arcadeDrive(0, 0));
+  )
+  .until(m_pid::atSetpoint)
+  .finallyDo((interrupted) -> this.arcadeDrive(0, 0));
+}
+
+  @Override
+  public void simulationPeriodic() {
+    // bypass SparkSim entirely by using .get()
+    m_driveSim.setInputs(m_leftLeader.get() * 12.0, m_rightLeader.get() * 12.0);
+    m_driveSim.update(0.020);
+    m_gyroscope.setSimHeading(m_driveSim.getHeading().getDegrees());
+    m_Field2d.setRobotPose(m_driveSim.getPose());
   }
 }
