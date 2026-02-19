@@ -88,21 +88,22 @@ public class DriveSubsystem extends SubsystemBase {
     m_drive.arcadeDrive(speed, rotation);
   }
 
-public Command turn180() {
-  return runOnce(() -> {
-      double target = edu.wpi.first.math.MathUtil.inputModulus(m_gyroscope.getHeading() + 180, -180, 180);
-      m_pid.setSetpoint(target);
-  })
-  .andThen(
-    run(() -> {
-      double rotationSpeed = m_pid.calculate(m_gyroscope.getHeading());
-      rotationSpeed = Math.max(-0.5, Math.min(0.5, rotationSpeed));
-      this.arcadeDrive(0, rotationSpeed);
+  public Command turn180() {
+    return this.runOnce(() -> {
+        double target = edu.wpi.first.math.MathUtil.inputModulus(m_gyroscope.getHeading() + 180, -180, 180);
+        m_pid.setSetpoint(target);
+        System.out.println("target acquired");
     })
-  )
-  .until(m_pid::atSetpoint)
-  .finallyDo((interrupted) -> this.arcadeDrive(0, 0));
-}
+    .andThen(
+      this.run(() -> {
+        double rotationSpeed = m_pid.calculate(m_gyroscope.getHeading());
+        rotationSpeed = Math.max(-0.5, Math.min(0.5, rotationSpeed));
+        this.arcadeDrive(0, rotationSpeed);
+      })
+    )
+    .until(m_pid::atSetpoint)
+    .finallyDo((interrupted) -> this.arcadeDrive(0, 0));
+  }
 
   @Override
   public void simulationPeriodic() {

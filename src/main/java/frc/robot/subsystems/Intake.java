@@ -14,8 +14,4 @@ public class Intake extends SubsystemBase {
             m_motor.set(m_motor.get() != 0 ? 0.8 : 0);
         });
     }
-    // public Command stopIntake() {
-    //     return runOnce(() -> {m_motor.set(0);});
-    // }
-
 }
