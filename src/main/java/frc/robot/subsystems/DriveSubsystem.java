@@ -5,11 +5,14 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 
@@ -30,7 +33,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final DifferentialDrive m_drive = new DifferentialDrive(m_leftLeader, m_rightLeader);
 
-  private final PIDController m_pid = new PIDController(0.03, 0, 0.002);
+  private final PIDController m_pid = new PIDController(0.03, 0.01, 0);
 
   private final DifferentialDrivetrainSim m_driveSim = new DifferentialDrivetrainSim(
     DCMotor.getNEO(2),
@@ -89,20 +92,25 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   public Command turn180() {
-    return this.runOnce(() -> {
-        double target = edu.wpi.first.math.MathUtil.inputModulus(m_gyroscope.getHeading() + 180, -180, 180);
-        m_pid.setSetpoint(target);
-        System.out.println("target acquired");
-    })
-    .andThen(
-      this.run(() -> {
-        double rotationSpeed = m_pid.calculate(m_gyroscope.getHeading());
-        rotationSpeed = Math.max(-0.5, Math.min(0.5, rotationSpeed));
-        this.arcadeDrive(0, rotationSpeed);
-      })
-    )
-    .until(m_pid::atSetpoint)
-    .finallyDo((interrupted) -> this.arcadeDrive(0, 0));
+    return Commands.sequence(
+      runOnce(
+        () -> {
+          double target = MathUtil.inputModulus(m_gyroscope.getHeading() + 180, -180, 180);
+          m_pid.setSetpoint(target);
+        }
+      ),
+      run(
+        () -> {
+          double rotationSpeed = m_pid.calculate(m_gyroscope.getHeading());
+          rotationSpeed = Math.max(-0.75, Math.min(0.75, rotationSpeed));
+          this.arcadeDrive(0, rotationSpeed);
+        }
+      ).until(
+        m_pid::atSetpoint
+      )
+    ).finallyDo(
+      () -> CommandScheduler.getInstance().cancel(this.turn180())
+    );
   }
 
   @Override
