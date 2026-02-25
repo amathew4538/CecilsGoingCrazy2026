@@ -1,6 +1,7 @@
 plugins {
     id "java"
     id "edu.wpi.first.GradleRIO" version "2026.2.1"
+    id "com.peterabeles.gversion" version "1.10"
 }
 
 java {
@@ -114,3 +115,12 @@ tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
 }
 
+project.compileJava.dependsOn(createVersionFile)
+gversion {
+  srcDir       = "src/main/java/"
+  classPackage = "frc.robot"
+  className    = "BuildConstants"
+  dateFormat   = "MM-dd-yyyy HH:mm:ss z"
+  timeZone     = "America/Chicago" // Use preferred time zone
+  indent       = "  "
+}
