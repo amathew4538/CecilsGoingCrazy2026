@@ -28,6 +28,9 @@ public class Robot extends LoggedRobot {
    * initialization code.
    */
   public Robot() {
+    // ! Driving seems to be broken with this. Confirmed: Sim on Mac with PS4
+
+    m_robotContainer = new RobotContainer();
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     Logger.recordMetadata("ProjectName", "CecilsGoingCrazy2026"); // Set a metadata value
@@ -42,9 +45,7 @@ public class Robot extends LoggedRobot {
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
     }
     Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
-
     Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
-    m_robotContainer = new RobotContainer();
   }
 
   /**
