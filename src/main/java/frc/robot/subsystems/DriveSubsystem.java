@@ -16,11 +16,17 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig; //C: this is mass importation
+
+// TODO: Make odometry
+// TODO: Make PhotonVision
+// TODO: Add PhotonVision and Odometry info to logs
 
 public class DriveSubsystem extends SubsystemBase {
 
@@ -118,8 +124,11 @@ public class DriveSubsystem extends SubsystemBase {
     // bypass SparkSim entirely by using .get()
     m_driveSim.setInputs(m_leftLeader.get() * 12.0, m_rightLeader.get() * 12.0);
     m_driveSim.update(0.020);
+
     m_gyroscope.setSimHeading(m_driveSim.getHeading().getDegrees());
     m_Field2d.setRobotPose(m_driveSim.getPose());
+
+    Logger.recordOutput("Drive/RobotPose", m_driveSim.getPose());
   }
 
   public Command resetSimPose() {
