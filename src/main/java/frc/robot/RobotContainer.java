@@ -31,7 +31,7 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
-    configureBindings();
+    updateControllerBindings();
   }
 
   /**
@@ -44,13 +44,15 @@ public class RobotContainer {
    * joysticks}.
    */
 
-  private void configureBindings() {
+  // In RobotContainer.java
+  public void updateControllerBindings() {
+    // Clear existing buttons if necessary, though this is tricky with Triggers
     if (DriverStation.getJoystickIsXbox(0)) {
         configureXboxBindings();
     } else {
         configurePS4Bindings();
     }
-  }
+}
 
   private void configureXboxBindings() {
     final CommandXboxController m_XboxController = new CommandXboxController(0);

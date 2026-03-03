@@ -11,6 +11,8 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 // * Uncomment for log replay
 // import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -23,6 +25,8 @@ public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
+
+  boolean wasXbox;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -99,6 +103,10 @@ public class Robot extends LoggedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
+
+    wasXbox = DriverStation.getJoystickIsXbox(0);
+    m_robotContainer.updateControllerBindings();
+
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
@@ -106,7 +114,14 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+    boolean isXbox = DriverStation.getJoystickIsXbox(0);
+
+    if (isXbox != wasXbox) {
+      m_robotContainer.updateControllerBindings();
+      wasXbox = isXbox;
+    }
+  }
 
   @Override
   public void testInit() {
