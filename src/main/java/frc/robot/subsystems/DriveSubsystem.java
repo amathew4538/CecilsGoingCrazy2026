@@ -68,8 +68,6 @@ public class DriveSubsystem extends SubsystemBase {
   private final double lowGearRatio = 7.29;
   private final double highGearRatio = 2.43;
 
-  private final double highCurrentThreshold = 45.0; // Caps power draw to prevent brownout
-
   private boolean isAutoShiftEnabled = true;
 
   /**
@@ -286,26 +284,20 @@ public class DriveSubsystem extends SubsystemBase {
     double leftMpS = m_leftEncoder.getVelocity() * velocityConversion;
     double rightMpS = m_rightEncoder.getVelocity() * velocityConversion;
     double avgVelocity = Math.abs((leftMpS + rightMpS) / 2.0);
-
-    double avgCurrent = (m_leftLeader.getOutputCurrent() + m_rightLeader.getOutputCurrent()) / 2.0;
     
     boolean currentlyHigh = m_pneumatics.isHighGear();
 
     if (!currentlyHigh && avgVelocity > highGearThreshold) {
       m_pneumatics.setHighGear(true);
       updateEncoderConversion(highGearRatio);
+      System.out.println("switched to high");
     }
-    else if (currentlyHigh) {
-      if (avgVelocity < lowGearThreshold || avgCurrent > highCurrentThreshold) {
+    else if (currentlyHigh && avgVelocity < lowGearThreshold) {
         m_pneumatics.setHighGear(false);
         updateEncoderConversion(lowGearRatio);
+        System.out.println("no high gear? :(");
 
-        if (avgCurrent > highCurrentThreshold) {
-            Logger.recordOutput("Drive/ReasonForDownshift", "High Current Spike");
-        } else {
-            Logger.recordOutput("Drive/ReasonForDownshift", "Low Speed");
-        }
-      }
+        Logger.recordOutput("Drive/ReasonForDownshift", "Low Speed");
     }
   }
 
