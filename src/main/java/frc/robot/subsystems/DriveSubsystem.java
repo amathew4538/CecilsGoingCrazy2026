@@ -65,6 +65,13 @@ public class DriveSubsystem extends SubsystemBase {
   private final double highGearThreshold = 3.5;   // Meters per second (Tune these!)
   private final double lowGearThreshold = 1.5;
 
+  private final double lowGearRatio = 7.29;
+  private final double highGearRatio = 2.43;
+
+  private final double highCurrentThreshold = 45.0; // Caps power draw to prevent brownout
+
+  private boolean isAutoShiftEnabled = true;
+
   /**
    * The main class to drive the robot. Used in {@link frc.robot.RobotContainer RobotContainer}.
    *
@@ -133,6 +140,11 @@ public class DriveSubsystem extends SubsystemBase {
       .withSize(4, 6)
       .withPosition(4, 0);
 
+    m_tab.add("Toggle Auto Shift", toggleAutoShift())
+      .withWidget(BuiltInWidgets.kCommand)
+      .withPosition(5, 0)
+      .withSize(2, 1);
+
     m_pid.enableContinuousInput(-180, 180);
     m_pid.setTolerance(2);
   }
@@ -188,6 +200,10 @@ public class DriveSubsystem extends SubsystemBase {
 
   @Override
   public void simulationPeriodic() {
+    double currentRatio = m_pneumatics.isHighGear() ? highGearRatio : lowGearRatio;
+
+    m_driveSim.setCurrentGearing(currentRatio);
+
     m_driveSim.setInputs(m_leftLeader.get() * 12.0, m_rightLeader.get() * 12.0);
     m_driveSim.update(0.020);
 
@@ -220,21 +236,76 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   /**
-   * Finds the average Meters Per Second of both Spark Maxes then shifts based on that.
+   * Updates the encoders in sim mode to speed up the robot in high gear
+   *
+   * @param ratio The ratio previously defined in {@link DriveSubsystem}
+   */
+  private void updateEncoderConversion(double ratio) {
+    double newPosFactor = (Units.inchesToMeters(6) * Math.PI) / ratio;
+    
+    // Create a temporary config to apply the change
+    SparkMaxConfig config = new SparkMaxConfig();
+    config.encoder.positionConversionFactor(newPosFactor);
+    config.encoder.velocityConversionFactor(newPosFactor / 60.0);
+
+    m_leftLeader.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+    m_rightLeader.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+  }
+
+  /**
+   * A command to turn on and off auto shift
+   *
+   * @see #autoShift()
+   *
+   * @return A command that swaps {@link #isAutoShiftEnabled} and logs it
+   */
+  public Command toggleAutoShift() {
+    return runOnce(() -> {
+        isAutoShiftEnabled = !isAutoShiftEnabled;
+        Logger.recordOutput("Drive/AutoShiftEnabled", isAutoShiftEnabled);
+    });
+  }
+
+  /**
+   * Finds the average Meters Per Second of both Spark Maxes then shifts.
+   *
+   * <ul>
+   * <li> <b>Reasons for shifting:</b> </li>
+   * <ul>
+   * <li> Shift up if speed hits {@link #highGearThreshold} </li>
+   * <li> Shift down if speed hits {@link #lowGearThreshold} </li>
+   * <li> Shift down if power draw is higher than {@link #highCurrentThreshold}
+   * </ul>
+   * </ul>
    *
    * @see Pneumatics#toggleSolenoids()
-   */
+  */
   private void autoShift() {
+    if (!isAutoShiftEnabled) return;
+
     double leftMpS = m_leftEncoder.getVelocity() * velocityConversion;
     double rightMpS = m_rightEncoder.getVelocity() * velocityConversion;
     double avgVelocity = Math.abs((leftMpS + rightMpS) / 2.0);
 
+    double avgCurrent = (m_leftLeader.getOutputCurrent() + m_rightLeader.getOutputCurrent()) / 2.0;
+    
     boolean currentlyHigh = m_pneumatics.isHighGear();
 
     if (!currentlyHigh && avgVelocity > highGearThreshold) {
-        m_pneumatics.setHighGear(true);
-    } else if (currentlyHigh && avgVelocity < lowGearThreshold) {
+      m_pneumatics.setHighGear(true);
+      updateEncoderConversion(highGearRatio);
+    }
+    else if (currentlyHigh) {
+      if (avgVelocity < lowGearThreshold || avgCurrent > highCurrentThreshold) {
         m_pneumatics.setHighGear(false);
+        updateEncoderConversion(lowGearRatio);
+
+        if (avgCurrent > highCurrentThreshold) {
+            Logger.recordOutput("Drive/ReasonForDownshift", "High Current Spike");
+        } else {
+            Logger.recordOutput("Drive/ReasonForDownshift", "Low Speed");
+        }
+      }
     }
   }
 
