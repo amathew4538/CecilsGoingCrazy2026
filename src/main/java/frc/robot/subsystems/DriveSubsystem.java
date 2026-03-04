@@ -69,6 +69,10 @@ public class DriveSubsystem extends SubsystemBase {
 
   // ! This drives the entire robot. Make sure your changes work in Sim before you edit!
 
+  // DONE: Add Odometry
+
+  // TESTING: Odometry logging in AdvantageScope
+
   // TODO: Make PhotonVision
   // TODO: Add PhotonVision info to logs
 
