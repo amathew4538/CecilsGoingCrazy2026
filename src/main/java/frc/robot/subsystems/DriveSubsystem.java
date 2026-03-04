@@ -69,6 +69,8 @@ public class DriveSubsystem extends SubsystemBase {
 
   private boolean isAutoShiftEnabled = true;
 
+  private int autoShiftTimer;
+
   /**
    * The main class to drive the robot. Used in {@link frc.robot.RobotContainer RobotContainer}.
    *
@@ -284,6 +286,11 @@ public class DriveSubsystem extends SubsystemBase {
   private void autoShift() {
     if (!isAutoShiftEnabled) return;
 
+    if (autoShiftTimer > 0) {
+      autoShiftTimer--;
+      return; 
+    }
+
     double currentRatio = m_pneumatics.isHighGear() ? highGearRatio : lowGearRatio;
     double currentVelocityConversion = (Units.inchesToMeters(6) * Math.PI) / (currentRatio * 60.0);
 
@@ -296,14 +303,14 @@ public class DriveSubsystem extends SubsystemBase {
     if (!currentlyHigh && avgVelocity > highGearThreshold) {
       m_pneumatics.setHighGear(true);
       updateEncoderConversion(highGearRatio);
+      autoShiftTimer = 10;
       System.out.println("switched to high");
     }
     else if (currentlyHigh && avgVelocity < lowGearThreshold) {
-        m_pneumatics.setHighGear(false);
-        updateEncoderConversion(lowGearRatio);
-        System.out.println("no high gear? :(");
-
-        Logger.recordOutput("Drive/ReasonForDownshift", "Low Speed");
+      m_pneumatics.setHighGear(false);
+      updateEncoderConversion(lowGearRatio);
+      System.out.println("no high gear? :(");
+      autoShiftTimer = 10;
     }
   }
 
