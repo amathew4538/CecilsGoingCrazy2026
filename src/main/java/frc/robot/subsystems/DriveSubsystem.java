@@ -50,17 +50,16 @@ public class DriveSubsystem extends SubsystemBase {
   private final DifferentialDrivetrainSim m_driveSim = new DifferentialDrivetrainSim(
     DCMotor.getNEO(2),
     7.29,
-    2.1,
-    Units.lbsToKilograms(50),
+    4.22,
+    Units.lbsToKilograms(60),
     Units.inchesToMeters(3),
-    0.7112,
+    Units.inchesToMeters(25),
     null
   );
 
   private final edu.wpi.first.wpilibj.smartdashboard.Field2d m_Field2d = new Field2d();
 
   private final double positionConversion = (Units.inchesToMeters(6) * Math.PI) / 7.29;
-  private final double velocityConversion = (Units.inchesToMeters(6) * Math.PI) / (7.29 * 60.0);
 
   private final double highGearThreshold = 3.5;   // Meters per second (Tune these!)
   private final double lowGearThreshold = 1.5;
@@ -142,6 +141,10 @@ public class DriveSubsystem extends SubsystemBase {
       .withWidget(BuiltInWidgets.kCommand)
       .withPosition(5, 0)
       .withSize(2, 1);
+
+    m_tab.add("Auto Shift On", isAutoShiftEnabled)
+      .withWidget(BuiltInWidgets.kBooleanBox)
+      .getEntry();
 
     m_pid.enableContinuousInput(-180, 180);
     m_pid.setTolerance(2);
@@ -281,8 +284,11 @@ public class DriveSubsystem extends SubsystemBase {
   private void autoShift() {
     if (!isAutoShiftEnabled) return;
 
-    double leftMpS = m_leftEncoder.getVelocity() * velocityConversion;
-    double rightMpS = m_rightEncoder.getVelocity() * velocityConversion;
+    double currentRatio = m_pneumatics.isHighGear() ? highGearRatio : lowGearRatio;
+    double currentVelocityConversion = (Units.inchesToMeters(6) * Math.PI) / (currentRatio * 60.0);
+
+    double leftMpS = m_leftEncoder.getVelocity() * currentVelocityConversion;
+    double rightMpS = m_rightEncoder.getVelocity() * currentVelocityConversion;
     double avgVelocity = Math.abs((leftMpS + rightMpS) / 2.0);
     
     boolean currentlyHigh = m_pneumatics.isHighGear();
