@@ -35,14 +35,20 @@ public class RobotContainer {
   }
 
   /**
-   * Use this method to define your trigger->command mappings. Triggers can be created via the
-   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
-   * predicate, or via the named factories in {@link
-   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
-   * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-   * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-   * joysticks}.
-   */
+   * Use this method to define your trigger -> command mappings.
+   *
+   * <br>
+   * <br>
+   *
+   * Triggers can be created via:
+   * <ul>
+   * <li>{@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary predicate </li>
+   * <li>{@link edu.wpi.first.wpilibj2.command.button.CommandGenericHID}</li>
+   * <li>{@link CommandXboxController Xbox}
+   * <li>{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller PS4}</li>
+   * <li>{@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight joysticks}</li>
+   * </ul>
+  */
 
   // In RobotContainer.java
   public void updateControllerBindings() {
@@ -52,8 +58,12 @@ public class RobotContainer {
     } else {
         configurePS4Bindings();
     }
-}
+  }
 
+  /**
+   * Configure the bindings for Xbox controllers
+   * @apiNote It's run by {@link #updateControllerBindings()}
+  */
   private void configureXboxBindings() {
     final CommandXboxController m_XboxController = new CommandXboxController(0);
 
@@ -83,6 +93,10 @@ public class RobotContainer {
     );
   }
 
+  /**
+   * Configure the bindings for PS4 controllers
+   * @apiNote It's run by {@link #updateControllerBindings()}
+  */
   private void configurePS4Bindings() {
     final CommandPS4Controller m_PS4Controller = new CommandPS4Controller(0);
 

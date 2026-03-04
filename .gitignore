@@ -177,6 +177,7 @@ simgui.json
 
 # Simulation data log directory
 logs/
+sim_logs/
 *.wpilog
 
 # Folder that has CTRE Phoenix Sim device config storage

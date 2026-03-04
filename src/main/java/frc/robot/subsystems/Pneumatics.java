@@ -32,6 +32,9 @@ public class Pneumatics extends SubsystemBase {
         .withWidget(BuiltInWidgets.kBooleanBox)
         .getEntry();
 
+    /**
+     * The main class used in the Pneumatics. Used in {@link frc.robot.RobotContainer RobotContainer}.
+     */
     public Pneumatics() {
         m_pneumaticHub.enableCompressorDigital();
 
@@ -54,6 +57,11 @@ public class Pneumatics extends SubsystemBase {
         m_gear.setBoolean(m_solenoidLeft.get() == kForward);
     }
 
+    /**
+     * Switches the solenoids between states
+     *
+     * @return A command that switches the state of the solenoids
+     */
     public Command toggleSolenoids() {
         return this.runOnce(() -> {
             Value targetValue = (m_solenoidLeft.get() == kForward) ? kReverse : kForward;

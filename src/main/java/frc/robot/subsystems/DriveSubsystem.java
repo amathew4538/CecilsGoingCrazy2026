@@ -7,6 +7,8 @@ import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -19,14 +21,12 @@ import frc.robot.Robot;
 import org.littletonrobotics.junction.Logger;
 
 import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig; //C: this is mass importation
 
-// TODO: Make odometry
-// TODO: Make PhotonVision
-// TODO: Add PhotonVision and Odometry info to logs
 
 public class DriveSubsystem extends SubsystemBase {
 
@@ -41,6 +41,12 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final PIDController m_pid = new PIDController(0.03, 0.01, 0);
 
+  private final DifferentialDriveOdometry m_odometry;
+
+
+  private final RelativeEncoder m_leftEncoder = m_leftLeader.getEncoder();
+  private final RelativeEncoder m_rightEncoder = m_rightLeader.getEncoder();
+
   private final DifferentialDrivetrainSim m_driveSim = new DifferentialDrivetrainSim(
     DCMotor.getNEO(2),
     7.29,
@@ -53,10 +59,35 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final edu.wpi.first.wpilibj.smartdashboard.Field2d m_Field2d = new Field2d();
 
+
+  /**
+   * The main class to drive the robot. Used in {@link frc.robot.RobotContainer RobotContainer}.
+   *
+   * @param gyro This is a parameter that initializes the gyroscope for DriveSubsystem based on the Robot Container
+   *
+  */
+
+  // ! This drives the entire robot. Make sure your changes work in Sim before you edit!
+
+  // TODO: Make PhotonVision
+  // TODO: Add PhotonVision info to logs
+
   public DriveSubsystem(Gyroscope gyro) {
     this.m_gyroscope = gyro;
 
-    SparkMaxConfig leftConfig = new SparkMaxConfig(); //C: preparing to pair the left side
+    double positionConversion = (Units.inchesToMeters(6) * Math.PI) / 7.29;
+
+    m_leftEncoder.setPosition(0);
+    m_rightEncoder.setPosition(0);
+
+    this.m_odometry = new DifferentialDriveOdometry(
+      Rotation2d.fromDegrees(m_gyroscope.getHeading()),
+      0.0,
+      0.0
+    );
+
+    SparkMaxConfig leftConfig = new SparkMaxConfig();
+    SparkMaxConfig leftLeaderConfig = new SparkMaxConfig(); //C: preparing to pair the left side
     SparkMaxConfig rightLeaderConfig = new SparkMaxConfig();
     SparkMaxConfig rightConfig = new SparkMaxConfig(); //C: ditto for right
 
@@ -68,8 +99,11 @@ public class DriveSubsystem extends SubsystemBase {
     rightConfig.inverted(true); //C: not much i can explain here when the above comment said it all already
     rightLeaderConfig.inverted(true);
 
+    leftLeaderConfig.encoder.positionConversionFactor(positionConversion);
+    rightLeaderConfig.encoder.positionConversionFactor(positionConversion);
+
     // 3. Apply configurations
-    m_leftLeader.configure(new SparkMaxConfig(), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    m_leftLeader.configure(leftLeaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     m_leftFollower.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     m_rightLeader.configure(rightLeaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     m_rightFollower.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -93,9 +127,32 @@ public class DriveSubsystem extends SubsystemBase {
     m_pid.setTolerance(2);
   }
 
+  /**
+   * This is the script that tells the robot to drive based on controller inputs
+   *
+   * @param speed The speed applied to the motors to drive forward
+   * @param rotation The changes to voltage to apply to cause a rotation determined based on the stick
+   *
+   * @see edu.wpi.first.wpilibj.drive.DifferentialDrive#arcadeDrive(double, double) arcadeDrive()
+   *
+   * @return Information on how to apply voltage to motors to drive in specified way
+  */
+
+  // ! Do not remove this! The robot will not drive!
+
   public void arcadeDrive(double speed, double rotation) {
     m_drive.arcadeDrive(speed, rotation);
   }
+
+  /**
+   * A PID that causes the robot to turn 180 degrees around
+   *
+   * @implNote Check the {@code m_pid} variable in {@link DriveSubsystem} to change PID values
+   *
+   * @return A command that tells the robot to calculate a target then turns to the target
+  */
+
+  // ! To change values, check Drive Subsytem
 
   public Command turn180() {
     return Commands.sequence(
@@ -121,15 +178,21 @@ public class DriveSubsystem extends SubsystemBase {
 
   @Override
   public void simulationPeriodic() {
-    // bypass SparkSim entirely by using .get()
     m_driveSim.setInputs(m_leftLeader.get() * 12.0, m_rightLeader.get() * 12.0);
     m_driveSim.update(0.020);
 
+    m_leftEncoder.setPosition(m_driveSim.getLeftPositionMeters());
+    m_rightEncoder.setPosition(m_driveSim.getRightPositionMeters());
     m_gyroscope.setSimHeading(m_driveSim.getHeading().getDegrees());
-    m_Field2d.setRobotPose(m_driveSim.getPose());
 
     Logger.recordOutput("Drive/RobotPose", m_driveSim.getPose());
   }
+
+  /**
+   * Resets the simulation rotation to allow reseting the gyro info to work
+   *
+   * @return A command that sets the rotation of the {@link edu.wpi.first.math.geometry.Pose2d#Pose2d() Pose2D} to 0 degrees
+   */
 
   public Command resetSimPose() {
       return runOnce(() -> {
@@ -144,5 +207,18 @@ public class DriveSubsystem extends SubsystemBase {
             m_driveSim.setPose(resetPose);
         }
     });
+  }
+
+  @Override
+  public void periodic() {
+    m_odometry.update(
+      Rotation2d.fromDegrees(m_gyroscope.getHeading()),
+      m_leftEncoder.getPosition(),
+      m_rightEncoder.getPosition()
+    );
+
+    m_Field2d.setRobotPose(m_odometry.getPoseMeters());
+
+    Logger.recordOutput("Drive/Pose", m_odometry.getPoseMeters());
   }
 }
