@@ -36,13 +36,13 @@ public class DriveSubsystem extends SubsystemBase {
   private final SparkMax m_rightFollower = new SparkMax(1, MotorType.kBrushless); //C: ditto of line 12 but for the right and uses sparkmax 1
 
   private Gyroscope m_gyroscope;
+  private Pneumatics m_pneumatics;
 
   private final DifferentialDrive m_drive = new DifferentialDrive(m_leftLeader, m_rightLeader);
 
   private final PIDController m_pid = new PIDController(0.03, 0.01, 0);
 
   private final DifferentialDriveOdometry m_odometry;
-
 
   private final RelativeEncoder m_leftEncoder = m_leftLeader.getEncoder();
   private final RelativeEncoder m_rightEncoder = m_rightLeader.getEncoder();
@@ -59,12 +59,17 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final edu.wpi.first.wpilibj.smartdashboard.Field2d m_Field2d = new Field2d();
 
+  private final double positionConversion = (Units.inchesToMeters(6) * Math.PI) / 7.29;
+  private final double velocityConversion = (Units.inchesToMeters(6) * Math.PI) / (7.29 * 60.0);
+
+  private final double highGearThreshold = 3.5;   // Meters per second (Tune these!)
+  private final double lowGearThreshold = 1.5;
 
   /**
    * The main class to drive the robot. Used in {@link frc.robot.RobotContainer RobotContainer}.
    *
-   * @param gyro This is a parameter that initializes the gyroscope for DriveSubsystem based on the Robot Container
-   *
+   * @param gyro This is a parameter that initializes the gyroscope for DriveSubsystem based on the RobotContainer
+   * @param pneumatics This is a parameter that takes in the pneumatics from RobotContainer
   */
 
   // ! This drives the entire robot. Make sure your changes work in Sim before you edit!
@@ -73,13 +78,14 @@ public class DriveSubsystem extends SubsystemBase {
 
   // TESTING: Odometry logging in AdvantageScope
 
+  // TODO: PathPlanner
+  // TODO: SysID
   // TODO: Make PhotonVision
   // TODO: Add PhotonVision info to logs
 
-  public DriveSubsystem(Gyroscope gyro) {
+  public DriveSubsystem(Gyroscope gyro, Pneumatics pneumatics) {
     this.m_gyroscope = gyro;
-
-    double positionConversion = (Units.inchesToMeters(6) * Math.PI) / 7.29;
+    this.m_pneumatics = pneumatics;
 
     m_leftEncoder.setPosition(0);
     m_rightEncoder.setPosition(0);
@@ -213,6 +219,25 @@ public class DriveSubsystem extends SubsystemBase {
     });
   }
 
+  /**
+   * Finds the average Meters Per Second of both Spark Maxes then shifts based on that.
+   *
+   * @see Pneumatics#toggleSolenoids()
+   */
+  private void autoShift() {
+    double leftMpS = m_leftEncoder.getVelocity() * velocityConversion;
+    double rightMpS = m_rightEncoder.getVelocity() * velocityConversion;
+    double avgVelocity = Math.abs((leftMpS + rightMpS) / 2.0);
+
+    boolean currentlyHigh = m_pneumatics.isHighGear();
+
+    if (!currentlyHigh && avgVelocity > highGearThreshold) {
+        m_pneumatics.setHighGear(true);
+    } else if (currentlyHigh && avgVelocity < lowGearThreshold) {
+        m_pneumatics.setHighGear(false);
+    }
+  }
+
   @Override
   public void periodic() {
     m_odometry.update(
@@ -220,6 +245,7 @@ public class DriveSubsystem extends SubsystemBase {
       m_leftEncoder.getPosition(),
       m_rightEncoder.getPosition()
     );
+    autoShift();
 
     m_Field2d.setRobotPose(m_odometry.getPoseMeters());
 

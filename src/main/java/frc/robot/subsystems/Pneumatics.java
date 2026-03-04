@@ -34,7 +34,10 @@ public class Pneumatics extends SubsystemBase {
 
     /**
      * The main class used in the Pneumatics. Used in {@link frc.robot.RobotContainer RobotContainer}.
-     */
+    */
+
+    // TESTING: Automatic Gear Switching
+
     public Pneumatics() {
         m_pneumaticHub.enableCompressorDigital();
 
@@ -58,7 +61,7 @@ public class Pneumatics extends SubsystemBase {
     }
 
     /**
-     * Switches the solenoids between states
+     * Switches the solenoids between states. For gear switching on the robot
      *
      * @return A command that switches the state of the solenoids
      */
@@ -68,5 +71,27 @@ public class Pneumatics extends SubsystemBase {
             m_solenoidLeft.set(targetValue);
             m_solenoidRight.set(targetValue);
          });
+    }
+
+    /**
+     * Sets the drivetrain to a specific gear.
+     *
+     * @param highGear True for High Gear, false for Low Gear.
+     *
+     * @apiNote This is used by the {@link DriveSubsystem} for automatic shifting.
+    */
+    public void setHighGear(boolean highGear) {
+        Value target = highGear ? kForward : kReverse;
+        m_solenoidLeft.set(target);
+        m_solenoidRight.set(target);
+    }
+
+    /**
+     * Returns whether the robot is currently in high gear.
+     *
+     * @return True if the robot is in high gear
+    */
+    public boolean isHighGear() {
+        return m_solenoidLeft.get() == kForward;
     }
 }

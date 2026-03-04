@@ -25,7 +25,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final Pneumatics m_pneumatics = new Pneumatics();
   private final Gyroscope m_gyroscope = new Gyroscope();
-  private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_gyroscope);
+  private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_gyroscope, m_pneumatics);
 
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
