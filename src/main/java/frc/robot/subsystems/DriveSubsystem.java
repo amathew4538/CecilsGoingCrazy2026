@@ -239,20 +239,15 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   /**
-   * Updates the encoders in sim mode to speed up the robot in high gear
-   *
-   * @param ratio The ratio previously defined in {@link DriveSubsystem}
+   * Converts raw motor RPM to Meters Per Second based on current gear.
    */
-  private void updateEncoderConversion(double ratio) {
-    // double newPosFactor = (Units.inchesToMeters(6) * Math.PI) / ratio;
-    
-    // Create a temporary config to apply the change
-    SparkMaxConfig config = new SparkMaxConfig();
-    // config.encoder.positionConversionFactor(newPosFactor);
-    // config.encoder.velocityConversionFactor(newPosFactor / 60.0);
+  private double getMetersPerSecond() {
+      double currentRatio = m_pneumatics.isHighGear() ? highGearRatio : lowGearRatio;
+      // 6 inch diameter, convert RPM to Rotations Per Second (/60)
+      double unitConversion = (Units.inchesToMeters(6) * Math.PI) / (currentRatio * 60.0);
 
-    m_leftLeader.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-    m_rightLeader.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+      double avgMotorRPM = (m_leftEncoder.getVelocity() + m_rightEncoder.getVelocity()) / 2.0;
+      return Math.abs(avgMotorRPM * unitConversion);
   }
 
   /**
@@ -284,35 +279,27 @@ public class DriveSubsystem extends SubsystemBase {
    * @see Pneumatics#toggleSolenoids()
   */
   private void autoShift() {
-    if (!isAutoShiftEnabled) return;
-
-    if (autoShiftTimer > 0) {
-      autoShiftTimer--;
-      return; 
+    if (!isAutoShiftEnabled || autoShiftTimer > 0) {
+      if (autoShiftTimer > 0) {
+        autoShiftTimer--;
+      }
+      return;
     }
 
-    double currentRatio = m_pneumatics.isHighGear() ? highGearRatio : lowGearRatio;
-    double currentVelocityConversion = (Units.inchesToMeters(6) * Math.PI) / (currentRatio * 60.0);
-
-    double leftMpS = m_leftEncoder.getVelocity() * currentVelocityConversion;
-    double rightMpS = m_rightEncoder.getVelocity() * currentVelocityConversion;
-    double avgVelocity = Math.abs((leftMpS + rightMpS) / 2.0);
-    
+    double avgVelocity = getMetersPerSecond();
     boolean currentlyHigh = m_pneumatics.isHighGear();
 
     if (!currentlyHigh && avgVelocity > highGearThreshold) {
-      m_pneumatics.setHighGear(true);
-      updateEncoderConversion(highGearRatio);
-      autoShiftTimer = 15;
-      System.out.println("switched to high" + avgVelocity);
-    }
+        m_pneumatics.setHighGear(true);
+        autoShiftTimer = 15;
+        System.out.println("Shifted HIGH. Speed was: " + avgVelocity);
+    } 
     else if (currentlyHigh && avgVelocity < lowGearThreshold) {
-      m_pneumatics.setHighGear(false);
-      updateEncoderConversion(lowGearRatio);
-      System.out.println("no high gear? :(" + avgVelocity);
-      autoShiftTimer = 15;
+        m_pneumatics.setHighGear(false);
+        autoShiftTimer = 15;
+        System.out.println("Shifted LOW. Speed was: " + avgVelocity);
     }
-  }
+}
 
   @Override
   public void periodic() {
