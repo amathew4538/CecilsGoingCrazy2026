@@ -59,10 +59,10 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final edu.wpi.first.wpilibj.smartdashboard.Field2d m_Field2d = new Field2d();
 
-  private final double positionConversion = (Units.inchesToMeters(6) * Math.PI) / 7.29;
+  // private final double positionConversion = (Units.inchesToMeters(6) * Math.PI) / 7.29;
 
   private final double highGearThreshold = 3.5;   // Meters per second (Tune these!)
-  private final double lowGearThreshold = 1.5;
+  private final double lowGearThreshold = 1.0;
 
   private final double lowGearRatio = 7.29;
   private final double highGearRatio = 2.43;
@@ -115,8 +115,8 @@ public class DriveSubsystem extends SubsystemBase {
     rightConfig.inverted(true); //C: not much i can explain here when the above comment said it all already
     rightLeaderConfig.inverted(true);
 
-    leftLeaderConfig.encoder.positionConversionFactor(positionConversion);
-    rightLeaderConfig.encoder.positionConversionFactor(positionConversion);
+    // leftLeaderConfig.encoder.positionConversionFactor(positionConversion);
+    // rightLeaderConfig.encoder.positionConversionFactor(positionConversion);
 
     // 3. Apply configurations
     m_leftLeader.configure(leftLeaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -244,12 +244,12 @@ public class DriveSubsystem extends SubsystemBase {
    * @param ratio The ratio previously defined in {@link DriveSubsystem}
    */
   private void updateEncoderConversion(double ratio) {
-    double newPosFactor = (Units.inchesToMeters(6) * Math.PI) / ratio;
+    // double newPosFactor = (Units.inchesToMeters(6) * Math.PI) / ratio;
     
     // Create a temporary config to apply the change
     SparkMaxConfig config = new SparkMaxConfig();
-    config.encoder.positionConversionFactor(newPosFactor);
-    config.encoder.velocityConversionFactor(newPosFactor / 60.0);
+    // config.encoder.positionConversionFactor(newPosFactor);
+    // config.encoder.velocityConversionFactor(newPosFactor / 60.0);
 
     m_leftLeader.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     m_rightLeader.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
@@ -303,14 +303,14 @@ public class DriveSubsystem extends SubsystemBase {
     if (!currentlyHigh && avgVelocity > highGearThreshold) {
       m_pneumatics.setHighGear(true);
       updateEncoderConversion(highGearRatio);
-      autoShiftTimer = 10;
-      System.out.println("switched to high");
+      autoShiftTimer = 15;
+      System.out.println("switched to high" + avgVelocity);
     }
     else if (currentlyHigh && avgVelocity < lowGearThreshold) {
       m_pneumatics.setHighGear(false);
       updateEncoderConversion(lowGearRatio);
-      System.out.println("no high gear? :(");
-      autoShiftTimer = 10;
+      System.out.println("no high gear? :(" + avgVelocity);
+      autoShiftTimer = 15;
     }
   }
 
