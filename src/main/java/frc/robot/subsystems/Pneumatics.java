@@ -36,7 +36,7 @@ public class Pneumatics extends SubsystemBase {
      * The main class used in the Pneumatics. Used in {@link frc.robot.RobotContainer RobotContainer}.
     */
 
-    // TESTING: Automatic Gear Switching
+    // DONE: Automatic Gear Switching
 
     public Pneumatics() {
         m_pneumaticHub.enableCompressorDigital();
