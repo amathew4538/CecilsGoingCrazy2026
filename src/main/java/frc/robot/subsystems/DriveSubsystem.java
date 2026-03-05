@@ -61,7 +61,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   // private final double positionConversion = (Units.inchesToMeters(6) * Math.PI) / 7.29;
 
-  private final double highGearThreshold = 3.5;   // Meters per second (Tune these!)
+  private final double highGearThreshold = 5.0;   // Meters per second (Tune these!)
   private final double lowGearThreshold = 1.0;
 
   private final double lowGearRatio = 7.29;
@@ -214,7 +214,7 @@ public class DriveSubsystem extends SubsystemBase {
     m_rightEncoder.setPosition(m_driveSim.getRightPositionMeters());
     m_gyroscope.setSimHeading(m_driveSim.getHeading().getDegrees());
 
-    Logger.recordOutput("Drive/RobotPose", m_driveSim.getPose());
+    Logger.recordOutput("Robot/Pose", m_driveSim.getPose());
   }
 
   /**
@@ -312,6 +312,6 @@ public class DriveSubsystem extends SubsystemBase {
 
     m_Field2d.setRobotPose(m_odometry.getPoseMeters());
 
-    Logger.recordOutput("Drive/Pose", m_odometry.getPoseMeters());
+    Logger.recordOutput("Robot/Pose", m_odometry.getPoseMeters());
   }
 }
