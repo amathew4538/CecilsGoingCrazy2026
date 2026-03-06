@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -17,16 +18,13 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
-
 import org.littletonrobotics.junction.Logger;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig; //C: this is mass importation
-
 
 public class DriveSubsystem extends SubsystemBase {
 
@@ -49,7 +47,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final DifferentialDrivetrainSim m_driveSim = new DifferentialDrivetrainSim(
     DCMotor.getNEO(2),
-    7.29,
+    5.0,
     4.22,
     Units.lbsToKilograms(60),
     Units.inchesToMeters(3),
@@ -303,15 +301,40 @@ public class DriveSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    double currentRatio = m_pneumatics.isHighGear() ? highGearRatio : lowGearRatio;
+    double positionFactor = (Units.inchesToMeters(6) * Math.PI) / currentRatio;
+
     m_odometry.update(
       Rotation2d.fromDegrees(m_gyroscope.getHeading()),
-      m_leftEncoder.getPosition(),
-      m_rightEncoder.getPosition()
+      m_leftEncoder.getPosition() * positionFactor,
+      m_rightEncoder.getPosition() * positionFactor
     );
+
     autoShift();
 
-    m_Field2d.setRobotPose(m_odometry.getPoseMeters());
+    var currentPose = m_odometry.getPoseMeters();
+    Logger.recordOutput("Robot/Pose", currentPose);
+    Logger.recordOutput("Robot/Pose3d", new edu.wpi.first.math.geometry.Pose3d(currentPose));
 
-    Logger.recordOutput("Robot/Pose", m_odometry.getPoseMeters());
+    m_Field2d.setRobotPose(currentPose);
+  }
+
+  /**
+   * Sets the voltages of the motors
+   * @param leftVolts Amount of volts to apply to the left side
+   * @param rightVolts Amount of volts to apply to the right side
+   */
+  public void setDriveVoltages(double leftVolts, double rightVolts) {
+    m_leftLeader.setVoltage(leftVolts);
+    m_rightLeader.setVoltage(rightVolts);
+    m_drive.feed();
+  }
+
+  /**
+   * Gets the pose of the robot from the odometry
+   * @return The pose of the robot as a Pose2D
+   */
+  public Pose2d getPose() {
+    return m_odometry.getPoseMeters();
   }
 }
