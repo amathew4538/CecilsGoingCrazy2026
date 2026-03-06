@@ -6,10 +6,14 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.LTVUnicycleController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -25,6 +29,7 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig; //C: this is mass importation
+import choreo.trajectory.DifferentialSample;
 
 public class DriveSubsystem extends SubsystemBase {
 
@@ -68,6 +73,10 @@ public class DriveSubsystem extends SubsystemBase {
   private boolean isAutoShiftEnabled = true;
 
   private int autoShiftTimer;
+
+  private final LTVUnicycleController controller = new LTVUnicycleController(0.02);
+
+  private final DifferentialDriveKinematics m_kinematics = new DifferentialDriveKinematics(Units.inchesToMeters(25));
 
   /**
    * The main class to drive the robot. Used in {@link frc.robot.RobotContainer RobotContainer}.
@@ -336,5 +345,53 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public Pose2d getPose() {
     return m_odometry.getPoseMeters();
+  }
+
+  /**
+   * <b>Choreo Drive Chassis Speeds</b> <br>
+   * Converts high-level robot movement (forward/turn) into specific wheel speeds. Used by Choreo
+   * @param speeds a linear component that allows to get velocity
+  */
+  public void choreoDriveCS(ChassisSpeeds speeds) {
+    DifferentialDriveWheelSpeeds wheelSpeeds = m_kinematics.toWheelSpeeds(speeds);
+
+    choreoDriveWV(wheelSpeeds.leftMetersPerSecond, wheelSpeeds.rightMetersPerSecond);
+  }
+
+  /**
+   * <b>Choreo Drive Wheel Velocities</b> <br>
+   * Commands the motors to reach specific velocities in meters per second.
+   * @param leftMetersPerSecond Amount of MpS to apply to the left
+   * @param rightMetersPerSecond Amount of MpS to apply to the right
+  */
+  public void choreoDriveWV(double leftMetersPerSecond, double rightMetersPerSecond) {
+    double maxRobotSpeed = 4.0;
+
+    double leftPercent = leftMetersPerSecond / maxRobotSpeed;
+    double rightPercent = rightMetersPerSecond / maxRobotSpeed;
+
+    m_leftLeader.setVoltage(leftPercent * 12.0);
+    m_rightLeader.setVoltage(rightPercent * 12.0);
+
+    m_drive.feed();
+  }
+
+  /**
+   *  Follows a Choreo trajectory
+   * @param sample
+   */
+  public void followTrajectory(DifferentialSample sample) {
+    Pose2d pose = getPose();
+
+    ChassisSpeeds ff = sample.getChassisSpeeds();
+
+    ChassisSpeeds speeds = controller.calculate(
+      pose,
+      sample.getPose(),
+      ff.vxMetersPerSecond,
+      ff.omegaRadiansPerSecond
+    );
+
+    choreoDriveCS(speeds);
   }
 }
