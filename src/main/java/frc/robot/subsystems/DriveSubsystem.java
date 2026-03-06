@@ -64,8 +64,8 @@ public class DriveSubsystem extends SubsystemBase {
   private final double highGearThreshold = 5.0;   // Meters per second (Tune these!)
   private final double lowGearThreshold = 1.0;
 
-  private final double lowGearRatio = 7.29;
-  private final double highGearRatio = 2.43;
+  private final double lowGearRatio = 5.0;
+  private final double highGearRatio = 1.66;
 
   private boolean isAutoShiftEnabled = true;
 
