@@ -90,8 +90,8 @@ public class DriveSubsystem extends SubsystemBase {
   // DONE: Add Odometry
 
   // TESTING: Odometry logging in AdvantageScope
+  // TESTING: PathPlanner
 
-  // TODO: PathPlanner
   // TODO: SysID
   // TODO: Make PhotonVision
   // TODO: Add PhotonVision info to logs
