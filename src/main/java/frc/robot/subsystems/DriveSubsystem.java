@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.LTVUnicycleController;
 import edu.wpi.first.math.controller.PIDController;
@@ -28,8 +29,9 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkMaxConfig; //C: this is mass importation
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import choreo.trajectory.DifferentialSample;
+import com.revrobotics.spark.config.SparkMaxConfig; //C: this is mass importation
 
 public class DriveSubsystem extends SubsystemBase {
 
@@ -78,6 +80,42 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final DifferentialDriveKinematics m_kinematics = new DifferentialDriveKinematics(Units.inchesToMeters(25));
 
+  private final SysIdRoutine m_sysIdRoutine =
+    new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,   // default ramp rate
+            null,   // default max voltage (12V)
+            null,   // default timeout
+            (state) -> Logger.recordOutput("SysId/State", state.toString())
+        ),
+        new SysIdRoutine.Mechanism(
+            // Voltage consumer
+            (voltage) -> {
+                m_leftLeader.setVoltage(voltage);
+                m_rightLeader.setVoltage(voltage);
+                m_drive.feed();
+            },
+
+            // Log function (RAW UNITS ONLY)
+            (SysIdRoutineLog log) -> {
+              log.motor("Drivetrain")
+               .voltage(
+                    edu.wpi.first.units.Units.Volts.of(
+                        m_leftLeader.getAppliedOutput()
+                            * m_leftLeader.getBusVoltage()
+                    )
+                )
+                .angularPosition(
+                  edu.wpi.first.units.Units.Rotations.of(m_leftEncoder.getPosition())
+                )
+                .angularVelocity(
+                  edu.wpi.first.units.Units.RotationsPerSecond.of(m_leftEncoder.getVelocity() / 60.0)
+                 );
+            },
+
+            this
+        )
+    );
   /**
    * The main class to drive the robot. Used in {@link frc.robot.RobotContainer RobotContainer}.
    *
@@ -319,7 +357,8 @@ public class DriveSubsystem extends SubsystemBase {
       m_rightEncoder.getPosition() * positionFactor
     );
 
-    autoShift();
+    // autoShift();
+    m_pneumatics.setHighGear(false); // ! Get rid of this later!
 
     var currentPose = m_odometry.getPoseMeters();
     Logger.recordOutput("Robot/Pose", currentPose);
@@ -393,5 +432,23 @@ public class DriveSubsystem extends SubsystemBase {
     );
 
     choreoDriveCS(speeds);
+  }
+
+  /**
+   * The command to run a SysID Quasistatic
+   * @param direction robot direction
+   * @return the command to run a quasistatic SysID
+   */
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return m_sysIdRoutine.quasistatic(direction);
+  }
+
+  /**
+   * The command to run a SysID Dynamic
+   * @param direction robot direction
+   * @return the command to run a dynamic SysID
+   */
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return m_sysIdRoutine.dynamic(direction);
   }
 }

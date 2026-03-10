@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -91,6 +91,14 @@ public class RobotContainer {
       m_gyroscope.resetHeading()
       .alongWith(m_robotDrive.resetSimPose())
     );
+
+    m_XboxController.povUp().whileTrue(m_robotDrive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+
+    m_XboxController.povDown().whileTrue(m_robotDrive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+
+    m_XboxController.povLeft().whileTrue(m_robotDrive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+
+    m_XboxController.povRight().whileTrue(m_robotDrive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
   }
 
   /**
