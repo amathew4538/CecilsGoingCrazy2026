@@ -10,7 +10,7 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 // ! Uncomment for log replay
 // import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
-
+import java.io.File;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -36,8 +36,9 @@ public class Robot extends LoggedRobot {
 
     if (Robot.isReal()) {
         Logger.recordMetadata("RobotMode", "REAL");
-        // ! This only logs if a usb stick is plugged into the RoboRIO
-        // Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
+        String logPath = "/u/logs";
+        if (!new File(logPath).exists()) {logPath = "/home/lvuser/logs";}
+        Logger.addDataReceiver(new WPILOGWriter(logPath)); // Log to a USB stick ("/U/logs")
         Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
     } else {
         // ! Uncomment for log replay

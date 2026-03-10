@@ -69,8 +69,8 @@ public class DriveSubsystem extends SubsystemBase {
   private final double highGearThreshold = 5.0;   // Meters per second (Tune these!)
   private final double lowGearThreshold = 1.0;
 
-  private final double lowGearRatio = 5.0;
-  private final double highGearRatio = 1.66;
+  private final double lowGearRatio = 20.523724;
+  private final double highGearRatio = 9.261941;
 
   private boolean isAutoShiftEnabled = true;
 
@@ -357,8 +357,9 @@ public class DriveSubsystem extends SubsystemBase {
       m_rightEncoder.getPosition() * positionFactor
     );
 
-    // autoShift();
-    m_pneumatics.setHighGear(false); // ! Get rid of this later!
+    autoShift();
+
+    Logger.recordOutput("Robot/LeftEncoder", m_leftEncoder.getPosition());
 
     var currentPose = m_odometry.getPoseMeters();
     Logger.recordOutput("Robot/Pose", currentPose);
