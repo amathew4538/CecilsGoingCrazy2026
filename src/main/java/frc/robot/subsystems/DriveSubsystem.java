@@ -68,7 +68,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   // private final double positionConversion = (Units.inchesToMeters(6) * Math.PI) / 7.29;
 
-  private final double highGearThreshold = 5.0;   // ! Meters per second (Tune these!)
+  private final double highGearThreshold = 1.75;   // ! Meters per second (Tune these!)
   private final double lowGearThreshold = 1.0;
 
   private final double lowGearRatio = 20.523724;
@@ -182,10 +182,10 @@ public class DriveSubsystem extends SubsystemBase {
     rightConfig.inverted(true); //C: not much i can explain here when the above comment said it all already
     rightLeaderConfig.inverted(true);
 
-    leftLeaderConfig.smartCurrentLimit(40);
-    leftConfig.smartCurrentLimit(40);
-    rightLeaderConfig.smartCurrentLimit(40);
-    rightConfig.smartCurrentLimit(40);
+    // leftLeaderConfig.smartCurrentLimit(40);
+    // leftConfig.smartCurrentLimit(40);
+    // rightLeaderConfig.smartCurrentLimit(40);
+    // rightConfig.smartCurrentLimit(40);
 
     // 3. Apply configurations
     m_leftLeader.configure(leftLeaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -384,6 +384,9 @@ public class DriveSubsystem extends SubsystemBase {
     m_totalLeftDist += deltaLeftRotations * positionFactor;
     m_totalRightDist += deltaRightRotations * positionFactor;
 
+    double avgVelocity = getMetersPerSecond();
+    Logger.recordOutput("Robot/AverageVelocity", avgVelocity);
+
     m_odometry.update(
         Rotation2d.fromDegrees(m_gyroscope.getHeading()),
         m_totalLeftDist,
@@ -394,8 +397,9 @@ public class DriveSubsystem extends SubsystemBase {
     m_prevRightDist = currentRightRaw;
 
     autoShift();
+    // m_pneumatics.setHighGear(true);
 
-    Logger.recordOutput("Robot/LeftEncoder", m_leftEncoder.getPosition());
+    // Logger.recordOutput("Robot/LeftEncoder", m_leftEncoder.getPosition());
 
     var currentPose = m_odometry.getPoseMeters();
     Logger.recordOutput("Robot/Pose", currentPose);
@@ -448,7 +452,8 @@ public class DriveSubsystem extends SubsystemBase {
     double leftMotorRPS = (leftMpS / wheelCircumference) * currentRatio;
     double rightMotorRPS = (rightMpS / wheelCircumference) * currentRatio;
 
-    var currentFF = getFeedforward();
+    // var currentFF = getFeedforward();
+    var currentFF = m_lowGearFF; 
 
     double leftVoltage = currentFF.calculate(leftMotorRPS);
     double rightVoltage = currentFF.calculate(rightMotorRPS);
@@ -464,6 +469,7 @@ public class DriveSubsystem extends SubsystemBase {
    * @param sample a Differential Sample
    */
   public void followTrajectory(DifferentialSample sample) {
+    isAutoShiftEnabled = false;
     Pose2d pose = getPose();
 
     ChassisSpeeds ff = sample.getChassisSpeeds();

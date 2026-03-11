@@ -38,7 +38,7 @@ public class Robot extends LoggedRobot {
         Logger.recordMetadata("RobotMode", "REAL");
         String logPath = "/u/logs";
         if (!new File(logPath).exists()) {logPath = "/home/lvuser/logs";}
-        Logger.addDataReceiver(new WPILOGWriter(logPath)); // Log to a USB stick ("/U/logs")
+        // Logger.addDataReceiver(new WPILOGWriter(logPath)); // Log to a USB stick ("/U/logs")
         Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
     } else {
         // ! Uncomment for log replay
