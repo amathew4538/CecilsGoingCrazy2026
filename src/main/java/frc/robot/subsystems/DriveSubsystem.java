@@ -127,6 +127,8 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final AutoFactory autoFactory;
 
+  private int currentlyHighLogger = 0;
+
   /**
    * The main class to drive the robot. Used in {@link frc.robot.RobotContainer RobotContainer}.
    *
@@ -137,11 +139,11 @@ public class DriveSubsystem extends SubsystemBase {
   // DONE: Add Odometry
   // DONE: SysID
   // DONE: Add Current Limits
+  // DONE: Delta Odometry
+  // ? What does delta odometry? It prevents odometry jumping with gear switches
 
   // TESTING: FeedForward
   // ? What is feedfoward? It makes the Choreo trajectory slightly more accurate based on SysID
-  // TESTING: Delta Odometry
-  // ? What does delta odometry? It prevents odometry jumping with gear switches
   // TESTING: Odometry logging in AdvantageScope
   // TESTING: PathPlanner
 
@@ -407,6 +409,15 @@ public class DriveSubsystem extends SubsystemBase {
     Logger.recordOutput("Robot/Pose3d", new edu.wpi.first.math.geometry.Pose3d(currentPose));
 
     m_Field2d.setRobotPose(currentPose);
+
+    if (m_pneumatics.isHighGear()){
+      currentlyHighLogger = 1;
+      Logger.recordOutput("Robot/IsHighGear", currentlyHighLogger);
+    }
+    else if (!m_pneumatics.isHighGear()) {
+      currentlyHighLogger = 0;
+      Logger.recordOutput("Robot/IsHighGear", currentlyHighLogger);
+    }
   }
 
   /**
