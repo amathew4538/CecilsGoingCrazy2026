@@ -31,6 +31,7 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import choreo.auto.AutoFactory;
 import choreo.trajectory.DifferentialSample;
 import com.revrobotics.spark.config.SparkMaxConfig; //C: this is mass importation
 
@@ -124,6 +125,8 @@ public class DriveSubsystem extends SubsystemBase {
   private final SimpleMotorFeedforward m_lowGearFF = new SimpleMotorFeedforward(0.094402, 0.12423, 0.026461);
   private final SimpleMotorFeedforward m_highGearFF = new SimpleMotorFeedforward(0.05, 0.08, 0.015); // ! Change these
 
+  private final AutoFactory autoFactory;
+
   /**
    * The main class to drive the robot. Used in {@link frc.robot.RobotContainer RobotContainer}.
    *
@@ -148,6 +151,14 @@ public class DriveSubsystem extends SubsystemBase {
   public DriveSubsystem(Gyroscope gyro, Pneumatics pneumatics) {
     this.m_gyroscope = gyro;
     this.m_pneumatics = pneumatics;
+
+    autoFactory = new AutoFactory(
+      this::getPose, // A function that returns the current robot pose
+      this::resetOdometry, // A function that resets the current robot pose to the provided Pose2d
+      this::followTrajectory, // The drive subsystem trajectory follower
+      true, // If alliance flipping should be enabled
+      this // The drive subsystem
+    );
 
     m_leftEncoder.setPosition(0);
     m_rightEncoder.setPosition(0);
@@ -505,5 +516,12 @@ public class DriveSubsystem extends SubsystemBase {
    */
   private SimpleMotorFeedforward getFeedforward() {
     return m_pneumatics.isHighGear() ? m_highGearFF : m_lowGearFF;
+  }
+
+  public Command testChoreo(){
+    return Commands.sequence(
+      autoFactory.resetOdometry("NewPath"),
+      autoFactory.trajectoryCmd("NewPath")
+    );
   }
 }

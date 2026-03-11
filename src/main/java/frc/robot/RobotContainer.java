@@ -99,6 +99,8 @@ public class RobotContainer {
     m_XboxController.povLeft().whileTrue(m_robotDrive.sysIdDynamic(SysIdRoutine.Direction.kForward));
 
     m_XboxController.povRight().whileTrue(m_robotDrive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+    m_XboxController.b().onTrue(m_robotDrive.testChoreo());
   }
 
   /**
@@ -134,6 +136,16 @@ public class RobotContainer {
     );
 
     m_PS4Controller.cross().onTrue(m_robotDrive.turn180());
+
+    m_PS4Controller.povUp().whileTrue(m_robotDrive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+
+    m_PS4Controller.povDown().whileTrue(m_robotDrive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+
+    m_PS4Controller.povLeft().whileTrue(m_robotDrive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+
+    m_PS4Controller.povRight().whileTrue(m_robotDrive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+    m_PS4Controller.circle().onTrue(m_robotDrive.testChoreo());
   }
 
   /**
