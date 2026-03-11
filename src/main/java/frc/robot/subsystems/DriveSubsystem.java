@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.LTVUnicycleController;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -66,7 +67,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   // private final double positionConversion = (Units.inchesToMeters(6) * Math.PI) / 7.29;
 
-  private final double highGearThreshold = 5.0;   // Meters per second (Tune these!)
+  private final double highGearThreshold = 5.0;   // ! Meters per second (Tune these!)
   private final double lowGearThreshold = 1.0;
 
   private final double lowGearRatio = 20.523724;
@@ -83,20 +84,18 @@ public class DriveSubsystem extends SubsystemBase {
   private final SysIdRoutine m_sysIdRoutine =
     new SysIdRoutine(
         new SysIdRoutine.Config(
-            null,   // default ramp rate
-            null,   // default max voltage (12V)
-            null,   // default timeout
+            null,
+            null,
+            null,
             (state) -> Logger.recordOutput("SysId/State", state.toString())
         ),
         new SysIdRoutine.Mechanism(
-            // Voltage consumer
             (voltage) -> {
                 m_leftLeader.setVoltage(voltage);
                 m_rightLeader.setVoltage(voltage);
                 m_drive.feed();
             },
 
-            // Log function (RAW UNITS ONLY)
             (SysIdRoutineLog log) -> {
               log.motor("Drivetrain")
                .voltage(
@@ -116,6 +115,15 @@ public class DriveSubsystem extends SubsystemBase {
             this
         )
     );
+
+  private double m_prevLeftDist = 0;
+  private double m_prevRightDist = 0;
+  private double m_totalLeftDist = 0;
+  private double m_totalRightDist = 0;
+
+  private final SimpleMotorFeedforward m_lowGearFF = new SimpleMotorFeedforward(0.094402, 0.12423, 0.026461);
+  private final SimpleMotorFeedforward m_highGearFF = new SimpleMotorFeedforward(0.05, 0.08, 0.015); // ! Change these
+
   /**
    * The main class to drive the robot. Used in {@link frc.robot.RobotContainer RobotContainer}.
    *
@@ -123,14 +131,17 @@ public class DriveSubsystem extends SubsystemBase {
    * @param pneumatics This is a parameter that takes in the pneumatics from RobotContainer
   */
 
-  // ! This drives the entire robot. Make sure your changes work in Sim before you edit!
-
   // DONE: Add Odometry
+  // DONE: SysID
+  // DONE: Add Current Limits
 
+  // TESTING: FeedForward
+  // ? What is feedfoward? It makes the Choreo trajectory slightly more accurate based on SysID
+  // TESTING: Delta Odometry
+  // ? What does delta odometry? It prevents odometry jumping with gear switches
   // TESTING: Odometry logging in AdvantageScope
   // TESTING: PathPlanner
 
-  // TODO: SysID
   // TODO: Make PhotonVision
   // TODO: Add PhotonVision info to logs
 
@@ -160,8 +171,10 @@ public class DriveSubsystem extends SubsystemBase {
     rightConfig.inverted(true); //C: not much i can explain here when the above comment said it all already
     rightLeaderConfig.inverted(true);
 
-    // leftLeaderConfig.encoder.positionConversionFactor(positionConversion);
-    // rightLeaderConfig.encoder.positionConversionFactor(positionConversion);
+    leftLeaderConfig.smartCurrentLimit(40);
+    leftConfig.smartCurrentLimit(40);
+    rightLeaderConfig.smartCurrentLimit(40);
+    rightConfig.smartCurrentLimit(40);
 
     // 3. Apply configurations
     m_leftLeader.configure(leftLeaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -351,11 +364,23 @@ public class DriveSubsystem extends SubsystemBase {
     double currentRatio = m_pneumatics.isHighGear() ? highGearRatio : lowGearRatio;
     double positionFactor = (Units.inchesToMeters(6) * Math.PI) / currentRatio;
 
+    double currentLeftRaw = m_leftEncoder.getPosition();
+    double currentRightRaw = m_rightEncoder.getPosition();
+
+    double deltaLeftRotations = currentLeftRaw - m_prevLeftDist;
+    double deltaRightRotations = currentRightRaw - m_prevRightDist;
+
+    m_totalLeftDist += deltaLeftRotations * positionFactor;
+    m_totalRightDist += deltaRightRotations * positionFactor;
+
     m_odometry.update(
-      Rotation2d.fromDegrees(m_gyroscope.getHeading()),
-      m_leftEncoder.getPosition() * positionFactor,
-      m_rightEncoder.getPosition() * positionFactor
+        Rotation2d.fromDegrees(m_gyroscope.getHeading()),
+        m_totalLeftDist,
+        m_totalRightDist
     );
+
+    m_prevLeftDist = currentLeftRaw;
+    m_prevRightDist = currentRightRaw;
 
     autoShift();
 
@@ -376,6 +401,7 @@ public class DriveSubsystem extends SubsystemBase {
   public void setDriveVoltages(double leftVolts, double rightVolts) {
     m_leftLeader.setVoltage(leftVolts);
     m_rightLeader.setVoltage(rightVolts);
+
     m_drive.feed();
   }
 
@@ -401,24 +427,30 @@ public class DriveSubsystem extends SubsystemBase {
   /**
    * <b>Choreo Drive Wheel Velocities</b> <br>
    * Commands the motors to reach specific velocities in meters per second.
-   * @param leftMetersPerSecond Amount of MpS to apply to the left
-   * @param rightMetersPerSecond Amount of MpS to apply to the right
+   * @param leftMpS Amount of MpS to apply to the left
+   * @param rightMpS Amount of MpS to apply to the right
   */
-  public void choreoDriveWV(double leftMetersPerSecond, double rightMetersPerSecond) {
-    double maxRobotSpeed = 4.0;
+  public void choreoDriveWV(double leftMpS, double rightMpS) {
+    double currentRatio = m_pneumatics.isHighGear() ? highGearRatio : lowGearRatio;
+    double wheelCircumference = Units.inchesToMeters(6) * Math.PI;
 
-    double leftPercent = leftMetersPerSecond / maxRobotSpeed;
-    double rightPercent = rightMetersPerSecond / maxRobotSpeed;
+    double leftMotorRPS = (leftMpS / wheelCircumference) * currentRatio;
+    double rightMotorRPS = (rightMpS / wheelCircumference) * currentRatio;
 
-    m_leftLeader.setVoltage(leftPercent * 12.0);
-    m_rightLeader.setVoltage(rightPercent * 12.0);
+    var currentFF = getFeedforward();
+
+    double leftVoltage = currentFF.calculate(leftMotorRPS);
+    double rightVoltage = currentFF.calculate(rightMotorRPS);
+
+    m_leftLeader.setVoltage(leftVoltage);
+    m_rightLeader.setVoltage(rightVoltage);
 
     m_drive.feed();
   }
 
   /**
    *  Follows a Choreo trajectory
-   * @param sample
+   * @param sample a Differential Sample
    */
   public void followTrajectory(DifferentialSample sample) {
     Pose2d pose = getPose();
@@ -451,5 +483,27 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public Command sysIdDynamic(SysIdRoutine.Direction direction) {
     return m_sysIdRoutine.dynamic(direction);
+  }
+
+  /**
+   * Resets the odometry of the robot
+   * @param pose Pose of the robot
+   */
+  public void resetOdometry(Pose2d pose) {
+    m_leftEncoder.setPosition(0);
+    m_rightEncoder.setPosition(0);
+    m_prevLeftDist = 0;
+    m_prevRightDist = 0;
+    m_totalLeftDist = 0;
+    m_totalRightDist = 0;
+    m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyroscope.getHeading()), 0, 0, pose);
+  }
+
+  /**
+   * Get the gear's Feed Forward
+   * @return The feed forward for the current gear
+   */
+  private SimpleMotorFeedforward getFeedforward() {
+    return m_pneumatics.isHighGear() ? m_highGearFF : m_lowGearFF;
   }
 }
