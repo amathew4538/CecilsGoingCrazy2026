@@ -373,7 +373,8 @@ public class DriveSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     double currentRatio = m_pneumatics.isHighGear() ? highGearRatio : lowGearRatio;
-    double positionFactor = (Units.inchesToMeters(6) * Math.PI) / currentRatio;
+    double wheelCoefficient = 1.0933;
+    double positionFactor = ((Units.inchesToMeters(6) * Math.PI) / currentRatio) * wheelCoefficient;
 
     double currentLeftRaw = m_leftEncoder.getPosition();
     double currentRightRaw = m_rightEncoder.getPosition();
