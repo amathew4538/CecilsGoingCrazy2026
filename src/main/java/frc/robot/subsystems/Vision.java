@@ -31,10 +31,9 @@ public class Vision extends SubsystemBase {
     private VisionSystemSim m_visionSim;
     private PhotonCameraSim m_cameraSim;
 
-    // ! Change this!
     private static final Transform3d robotToCam = new Transform3d(
-        new Translation3d(0.1, 0.0, 0.2), 
-        new Rotation3d(0, 0, 0)
+        new Translation3d(0.42, 0.0, 0.24), 
+        new Rotation3d(0, Math.toRadians(-45), 0)
     );
 
     public Vision() {
