@@ -68,8 +68,10 @@ public final class Constants {
     public static double m_totalRightDist = 0;
 
     public final static SimpleMotorFeedforward m_lowGearFF = new SimpleMotorFeedforward(0.094402, 0.12423, 0.026461);
-    // public final SimpleMotorFeedforward m_highGearFF = new SimpleMotorFeedforward(0.05, 0.08, 0.015); // ! Change these
+    public final static SimpleMotorFeedforward m_highGearFF = new SimpleMotorFeedforward(0.05, 0.08, 0.015); // ! Change these
 
     public static boolean currentlyHighLogger = false;
+
+    public static double wheelCoefficient = 1.0933;
   }
 }

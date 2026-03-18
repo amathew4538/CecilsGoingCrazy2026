@@ -4,10 +4,13 @@
 
 package frc.robot;
 
-
+import frc.robot.subsystems.AutoShift;
+import frc.robot.subsystems.ChoreoCommands;
+import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.Gyroscope;
+import frc.robot.subsystems.OdometryManager;
 import frc.robot.subsystems.Pneumatics;
-import frc.robot.subsystems.drive.DriveSubsystem;
+import frc.robot.subsystems.SysID;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
@@ -24,7 +27,13 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final Pneumatics m_pneumatics = new Pneumatics();
   private final Gyroscope m_gyroscope = new Gyroscope();
-  private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_gyroscope, m_pneumatics);
+  private final AutoShift m_autoShift = new AutoShift(m_pneumatics);
+  private final OdometryManager m_odometry = new OdometryManager(m_gyroscope);
+  private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_gyroscope, m_pneumatics, m_autoShift);
+  @SuppressWarnings("unused")
+  private final RobotInfo m_robotInfo = new RobotInfo(m_robotDrive, m_gyroscope, m_pneumatics, m_autoShift, m_odometry);
+  private final ChoreoCommands m_choreo = new ChoreoCommands(m_robotDrive, m_pneumatics, m_odometry);
+  private final SysID m_sysID = new SysID(m_robotDrive);
 
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -91,15 +100,15 @@ public class RobotContainer {
       .alongWith(m_robotDrive.resetSimPose())
     );
 
-    m_XboxController.povUp().whileTrue(m_robotDrive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    m_XboxController.povUp().whileTrue(m_sysID.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
 
-    m_XboxController.povDown().whileTrue(m_robotDrive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    m_XboxController.povDown().whileTrue(m_sysID.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
 
-    m_XboxController.povLeft().whileTrue(m_robotDrive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_XboxController.povLeft().whileTrue(m_sysID.sysIdDynamic(SysIdRoutine.Direction.kForward));
 
-    m_XboxController.povRight().whileTrue(m_robotDrive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    m_XboxController.povRight().whileTrue(m_sysID.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    m_XboxController.b().onTrue(m_robotDrive.testChoreo());
+    m_XboxController.b().onTrue(m_choreo.testChoreo());
   }
 
   /**
@@ -136,15 +145,15 @@ public class RobotContainer {
 
     m_PS4Controller.cross().onTrue(m_robotDrive.turn180());
 
-    m_PS4Controller.povUp().whileTrue(m_robotDrive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    m_PS4Controller.povUp().whileTrue(m_sysID.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
 
-    m_PS4Controller.povDown().whileTrue(m_robotDrive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    m_PS4Controller.povDown().whileTrue(m_sysID.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
 
-    m_PS4Controller.povLeft().whileTrue(m_robotDrive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_PS4Controller.povLeft().whileTrue(m_sysID.sysIdDynamic(SysIdRoutine.Direction.kForward));
 
-    m_PS4Controller.povRight().whileTrue(m_robotDrive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    m_PS4Controller.povRight().whileTrue(m_sysID.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    m_PS4Controller.circle().onTrue(m_robotDrive.testChoreo());
+    m_PS4Controller.circle().onTrue(m_choreo.testChoreo());
   }
 
   /**
