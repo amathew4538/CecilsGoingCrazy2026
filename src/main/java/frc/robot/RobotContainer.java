@@ -30,7 +30,7 @@ public class RobotContainer {
   private final Gyroscope m_gyroscope = new Gyroscope();
   private final AutoShift m_autoShift = new AutoShift(m_pneumatics);
   private final OdometryManager m_odometry = new OdometryManager(m_gyroscope);
-    private final Vision m_vision = new Vision();
+    private final Vision m_vision = new Vision(m_odometry);
   private final DriveSubsystem m_drive = new DriveSubsystem(m_gyroscope, m_pneumatics, m_autoShift);
   @SuppressWarnings("unused")
   private final RobotInfo m_robotInfo = new RobotInfo(m_drive, m_gyroscope, m_pneumatics, m_autoShift, m_odometry, m_vision);

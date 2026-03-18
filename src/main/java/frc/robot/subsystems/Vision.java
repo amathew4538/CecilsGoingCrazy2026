@@ -24,6 +24,8 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Vision extends SubsystemBase {
+    private final OdometryManager m_odometry;
+
     private final PhotonCamera m_camera = new PhotonCamera("JerrysEye");
     private final PhotonPoseEstimator m_poseEstimator;
     private PhotonPipelineResult latestResult;
@@ -36,7 +38,9 @@ public class Vision extends SubsystemBase {
         new Rotation3d(0, Math.toRadians(-45), 0)
     );
 
-    public Vision() {
+    public Vision(OdometryManager odometry) {
+        this.m_odometry = odometry;
+
         AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
         m_poseEstimator = new PhotonPoseEstimator(layout, robotToCam);
 
@@ -80,6 +84,11 @@ public class Vision extends SubsystemBase {
 
             visionEstimation.ifPresent(estimation -> {
                 if (estimation.targetsUsed.get(0).getPoseAmbiguity() < 0.2) {
+                    m_odometry.addVisionMeasurement(
+                        estimation.estimatedPose.toPose2d(),
+                        estimation.timestampSeconds
+                    );
+
                     Logger.recordOutput("Robot/Vision/EstimatedPose", estimation.estimatedPose.toPose2d());
                     Logger.recordOutput("Robot/Vision/EstimatedPose3d", estimation.estimatedPose);
                     Logger.recordOutput("Robot/Vision/Timestamp", estimation.timestampSeconds);

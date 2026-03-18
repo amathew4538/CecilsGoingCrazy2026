@@ -1,6 +1,10 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.Logger;
+
+import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -10,6 +14,7 @@ public class OdometryManager extends SubsystemBase{
     private final Gyroscope m_gyro;
 
     private final DifferentialDriveOdometry m_odometry;
+    private final DifferentialDrivePoseEstimator m_poseEstimator;
 
     public OdometryManager(Gyroscope gyro) {
         this.m_gyro = gyro;
@@ -18,6 +23,14 @@ public class OdometryManager extends SubsystemBase{
           Rotation2d.fromDegrees(m_gyro.getHeading()),
           0.0,
           0.0
+        );
+
+        this.m_poseEstimator = new DifferentialDrivePoseEstimator(
+            DriveConstants.m_kinematics,
+            Rotation2d.fromDegrees(m_gyro.getHeading()),
+            0.0,
+            0.0,
+            new Pose2d()
         );
     }
 
@@ -34,6 +47,8 @@ public class OdometryManager extends SubsystemBase{
      * @param pose Pose of the robot
     */
     public void resetOdometry(Pose2d pose) {
+        m_gyro.resetHeading();
+
         DriveConstants.m_leftEncoder.setPosition(0);
         DriveConstants.m_rightEncoder.setPosition(0);
 
@@ -43,6 +58,24 @@ public class OdometryManager extends SubsystemBase{
         DriveConstants.m_totalRightDist = 0;
 
         m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getHeading()), 0, 0, pose);
+        m_poseEstimator.resetPosition(Rotation2d.fromDegrees(m_gyro.getHeading()), 0, 0, pose);
+    }
+
+    /**
+     * Adds vision to odometry
+     * @param visionRobotPose the pose according to vision
+     * @param timestamp the timestamp from vision
+     */
+    public void addVisionMeasurement(Pose2d visionRobotPose, double timestamp) {
+        m_poseEstimator.addVisionMeasurement(visionRobotPose, timestamp);
+    }
+
+    /**
+     * Gets the combined pose of the robot
+     * @return the pose
+     */
+    public Pose2d getFinalPose() {
+        return m_poseEstimator.getEstimatedPosition();
     }
 
     @Override
@@ -52,8 +85,14 @@ public class OdometryManager extends SubsystemBase{
             DriveConstants.m_totalLeftDist,
             DriveConstants.m_totalRightDist
         );
+        m_poseEstimator.update(
+            Rotation2d.fromDegrees(m_gyro.getHeading()),
+            DriveConstants.m_totalLeftDist,
+            DriveConstants.m_totalRightDist
+        );
+        DriveConstants.m_Field2d.setRobotPose(getFinalPose());
 
-        var currentPose = getPose();
-        DriveConstants.m_Field2d.setRobotPose(currentPose);
+        Logger.recordOutput("Odometry/FinalPose", getFinalPose());
+        Logger.recordOutput("Odometry/FinalPose3d", new Pose3d(getFinalPose()));
     }
 }
