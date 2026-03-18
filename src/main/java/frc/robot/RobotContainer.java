@@ -30,13 +30,12 @@ public class RobotContainer {
   private final Gyroscope m_gyroscope = new Gyroscope();
   private final AutoShift m_autoShift = new AutoShift(m_pneumatics);
   private final OdometryManager m_odometry = new OdometryManager(m_gyroscope);
+    private final Vision m_vision = new Vision();
   private final DriveSubsystem m_drive = new DriveSubsystem(m_gyroscope, m_pneumatics, m_autoShift);
   @SuppressWarnings("unused")
-  private final RobotInfo m_robotInfo = new RobotInfo(m_drive, m_gyroscope, m_pneumatics, m_autoShift, m_odometry);
+  private final RobotInfo m_robotInfo = new RobotInfo(m_drive, m_gyroscope, m_pneumatics, m_autoShift, m_odometry, m_vision);
   private final ChoreoCommands m_choreo = new ChoreoCommands(m_drive, m_pneumatics, m_odometry);
   private final SysID m_sysID = new SysID(m_drive);
-  @SuppressWarnings("unused")
-  private final Vision m_vision = new Vision();
 
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */

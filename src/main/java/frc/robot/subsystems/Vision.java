@@ -19,6 +19,8 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Vision extends SubsystemBase {
@@ -41,16 +43,26 @@ public class Vision extends SubsystemBase {
 
         if (RobotBase.isSimulation()) {
             var cameraProp = new SimCameraProperties();
-            cameraProp.setCalibration(960, 720, Rotation2d.fromDegrees(90));
-            cameraProp.setCalibError(0.01, 0.10);
-            cameraProp.setFPS(20);
+            cameraProp.setCalibration(640, 480, Rotation2d.fromDegrees(68.5));
+            cameraProp.setCalibError(0.01, 0.08);
+            cameraProp.setFPS(30);
+            cameraProp.setAvgLatencyMs(35);       // USB cameras usually have ~35ms latency
+            cameraProp.setLatencyStdDevMs(5);
 
             m_visionSim = new VisionSystemSim("main");
             m_visionSim.addAprilTags(layout);
 
             m_cameraSim = new PhotonCameraSim(m_camera, cameraProp);
+            m_cameraSim.enableRawStream(true);
+            m_cameraSim.enableProcessedStream(true);
 
             m_visionSim.addCamera(m_cameraSim, robotToCam);
+        }
+
+        if (RobotBase.isSimulation()) {
+            var debugField = m_visionSim.getDebugField();
+            Shuffleboard.getTab("Vision").add("SimField", debugField)
+                .withWidget(BuiltInWidgets.kField);
         }
     }
 
@@ -68,13 +80,12 @@ public class Vision extends SubsystemBase {
             }
 
             visionEstimation.ifPresent(estimation -> {
-                Logger.recordOutput("Vision/EstimatedPose", estimation.estimatedPose.toPose2d());
-                Logger.recordOutput("Vision/Timestamp", estimation.timestampSeconds);
+                if (estimation.targetsUsed.get(0).getPoseAmbiguity() < 0.2) {
+                    Logger.recordOutput("Robot/Vision/EstimatedPose", estimation.estimatedPose.toPose2d());
+                    Logger.recordOutput("Robot/Vision/EstimatedPose3d", estimation.estimatedPose);
+                    Logger.recordOutput("Robot/Vision/Timestamp", estimation.timestampSeconds);
+                }
             });
-        }
-
-        if (latestResult != null) {
-            Logger.recordOutput("Vision/HasTarget", latestResult.hasTargets());
         }
     }
 

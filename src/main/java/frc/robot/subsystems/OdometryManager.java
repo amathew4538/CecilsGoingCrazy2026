@@ -15,7 +15,7 @@ public class OdometryManager extends SubsystemBase{
         this.m_gyro = gyro;
 
         this.m_odometry = new DifferentialDriveOdometry(
-          Rotation2d.fromDegrees(DriveConstants.m_gyroscope.getHeading()),
+          Rotation2d.fromDegrees(m_gyro.getHeading()),
           0.0,
           0.0
         );

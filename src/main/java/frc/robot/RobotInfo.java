@@ -9,6 +9,7 @@ import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.Gyroscope;
 import frc.robot.subsystems.OdometryManager;
 import frc.robot.subsystems.Pneumatics;
+import frc.robot.subsystems.Vision;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import java.util.Map;
@@ -20,21 +21,24 @@ public class RobotInfo extends SubsystemBase {
   private final Pneumatics m_pneumatics;
   private final AutoShift m_autoShift;
   private final OdometryManager m_odometry;
+  private final Vision m_vision;
 
   private GenericEntry m_compressor;
   private GenericEntry m_pressureFull;
   private GenericEntry m_gear;
 
-  public RobotInfo(DriveSubsystem drive, Gyroscope gyro, Pneumatics pneumatics, AutoShift autoShift, OdometryManager odometry) {
+  public RobotInfo(DriveSubsystem drive, Gyroscope gyro, Pneumatics pneumatics, AutoShift autoShift, OdometryManager odometry, Vision vision) {
     this.m_drive = drive;
     this.m_gyro = gyro;
     this.m_pneumatics = pneumatics;
     this.m_autoShift = autoShift;
     this.m_odometry = odometry;
+    this.m_vision = vision;
 
     ShuffleboardTab m_driveTab = Shuffleboard.getTab("Drive System");
     ShuffleboardTab m_gyroTab = Shuffleboard.getTab("Sensors");
     ShuffleboardTab m_pneumaticsTab = Shuffleboard.getTab("Pneumatics");
+    ShuffleboardTab m_visionTab = Shuffleboard.getTab("Vision");
 
     m_driveTab.add("Drive Train", m_drive)
       .withWidget(BuiltInWidgets.kDifferentialDrive)
@@ -75,7 +79,7 @@ public class RobotInfo extends SubsystemBase {
         .withWidget(BuiltInWidgets.kBooleanBox)
         .getEntry();
 
-    m_gear = m_pneumaticsTab.add("High gear?", false)
+    m_gear = m_pneumaticsTab.add("High Gear?", false)
         .withWidget(BuiltInWidgets.kBooleanBox)
         .getEntry();
 
@@ -85,6 +89,10 @@ public class RobotInfo extends SubsystemBase {
       .withWidget(BuiltInWidgets.kCommand)
       .withPosition(5, 0)
       .withSize(2, 1);
+
+    m_visionTab.add("Has Target?", m_vision.hasTargets())
+      .withWidget(BuiltInWidgets.kBooleanBox)
+      .getEntry();
     }
 
   @Override
@@ -108,5 +116,7 @@ public class RobotInfo extends SubsystemBase {
     Logger.recordOutput("Robot/Pneumatics/LeftEncoder", DriveConstants.m_leftEncoder.getPosition());
 
     Logger.recordOutput("Robot/Gyro/Heading", m_gyro.getHeading());
+
+    Logger.recordOutput("Robot/Vision/HasTarget", m_vision.hasTargets());
   }
 }
