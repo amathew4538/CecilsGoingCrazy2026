@@ -91,24 +91,22 @@ public class RobotInfo extends SubsystemBase {
   public void periodic() {
     m_compressor.setBoolean(m_pneumatics.isCompressorRunning());
     m_pressureFull.setBoolean(!m_pneumatics.isPressureFull());
-
+    double avgVelocity = m_drive.getMetersPerSecond();
     m_gear.setBoolean(m_pneumatics.isHighGear());
 
     if (Robot.isSimulation()) {
-      Logger.recordOutput("Robot/Pose", m_drive.getSimPose());
-      Logger.recordOutput("Robot/Pose3d", new edu.wpi.first.math.geometry.Pose3d(m_drive.getSimPose()));
+      Logger.recordOutput("Robot/Drive/Pose", m_drive.getSimPose());
+      Logger.recordOutput("Robot/Drive/Pose3d", new edu.wpi.first.math.geometry.Pose3d(m_drive.getSimPose()));
     } else if (Robot.isReal()) {
-      Logger.recordOutput("Robot/Pose", m_odometry.getPose());
-      Logger.recordOutput("Robot/Pose3d", new edu.wpi.first.math.geometry.Pose3d(m_odometry.getPose()));
+      Logger.recordOutput("Robot/Drive/Pose", m_odometry.getPose());
+      Logger.recordOutput("Robot/Drive/Pose3d", new edu.wpi.first.math.geometry.Pose3d(m_odometry.getPose()));
     }
+    Logger.recordOutput("Robot/Drive/AverageVelocity", avgVelocity);
 
-    Logger.recordOutput("Robot/AutoShiftEnabled", DriveConstants.isAutoShiftEnabled);
+    Logger.recordOutput("Robot/Pneumatics/AutoShiftEnabled", DriveConstants.isAutoShiftEnabled);
+    Logger.recordOutput("Robot/Pneumatics/IsHighGear", DriveConstants.currentlyHighLogger);
+    Logger.recordOutput("Robot/Pneumatics/LeftEncoder", DriveConstants.m_leftEncoder.getPosition());
 
-    double avgVelocity = m_drive.getMetersPerSecond();
-    Logger.recordOutput("Robot/AverageVelocity", avgVelocity);
-
-    Logger.recordOutput("Robot/IsHighGear", DriveConstants.currentlyHighLogger);
-
-    Logger.recordOutput("Robot/LeftEncoder", DriveConstants.m_leftEncoder.getPosition());
+    Logger.recordOutput("Robot/Gyro/Heading", m_gyro.getHeading());
   }
 }

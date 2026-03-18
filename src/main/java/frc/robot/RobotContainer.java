@@ -11,6 +11,7 @@ import frc.robot.subsystems.Gyroscope;
 import frc.robot.subsystems.OdometryManager;
 import frc.robot.subsystems.Pneumatics;
 import frc.robot.subsystems.SysID;
+import frc.robot.subsystems.Vision;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
@@ -29,11 +30,13 @@ public class RobotContainer {
   private final Gyroscope m_gyroscope = new Gyroscope();
   private final AutoShift m_autoShift = new AutoShift(m_pneumatics);
   private final OdometryManager m_odometry = new OdometryManager(m_gyroscope);
-  private final DriveSubsystem m_robotDrive = new DriveSubsystem(m_gyroscope, m_pneumatics, m_autoShift);
+  private final DriveSubsystem m_drive = new DriveSubsystem(m_gyroscope, m_pneumatics, m_autoShift);
   @SuppressWarnings("unused")
-  private final RobotInfo m_robotInfo = new RobotInfo(m_robotDrive, m_gyroscope, m_pneumatics, m_autoShift, m_odometry);
-  private final ChoreoCommands m_choreo = new ChoreoCommands(m_robotDrive, m_pneumatics, m_odometry);
-  private final SysID m_sysID = new SysID(m_robotDrive);
+  private final RobotInfo m_robotInfo = new RobotInfo(m_drive, m_gyroscope, m_pneumatics, m_autoShift, m_odometry);
+  private final ChoreoCommands m_choreo = new ChoreoCommands(m_drive, m_pneumatics, m_odometry);
+  private final SysID m_sysID = new SysID(m_drive);
+  @SuppressWarnings("unused")
+  private final Vision m_vision = new Vision();
 
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -76,16 +79,16 @@ public class RobotContainer {
     final CommandXboxController m_XboxController = new CommandXboxController(0);
 
     if (Robot.isSimulation()){
-      m_robotDrive.setDefaultCommand(
-          m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
+      m_drive.setDefaultCommand(
+          m_drive.run(() -> m_drive.arcadeDrive(
               -m_XboxController.getLeftY(),
               -m_XboxController.getRightX() * 0.5
           ))
       );
     }
     else {
-      m_robotDrive.setDefaultCommand(
-          m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
+      m_drive.setDefaultCommand(
+          m_drive.run(() -> m_drive.arcadeDrive(
               -m_XboxController.getLeftY(),
               m_XboxController.getRightX()
           ))
@@ -93,11 +96,11 @@ public class RobotContainer {
     }
     m_XboxController.rightBumper().onTrue(m_pneumatics.toggleSolenoids());
 
-    m_XboxController.a().onTrue(m_robotDrive.turn180());
+    m_XboxController.a().onTrue(m_drive.turn180());
 
     m_XboxController.y().onTrue(
       m_gyroscope.resetHeading()
-      .alongWith(m_robotDrive.resetSimPose())
+      .alongWith(m_drive.resetSimPose())
     );
 
     m_XboxController.povUp().whileTrue(m_sysID.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
@@ -119,8 +122,8 @@ public class RobotContainer {
     final CommandPS4Controller m_PS4Controller = new CommandPS4Controller(0);
 
     if (Robot.isSimulation()){
-      m_robotDrive.setDefaultCommand(
-          m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
+      m_drive.setDefaultCommand(
+          m_drive.run(() -> m_drive.arcadeDrive(
               -m_PS4Controller.getLeftY(),
               -m_PS4Controller.getRightX() * 0.5
           ))
@@ -128,8 +131,8 @@ public class RobotContainer {
     }
 
     else {
-      m_robotDrive.setDefaultCommand(
-          m_robotDrive.run(() -> m_robotDrive.arcadeDrive(
+      m_drive.setDefaultCommand(
+          m_drive.run(() -> m_drive.arcadeDrive(
               -m_PS4Controller.getLeftY(),
               -m_PS4Controller.getRightX()
           ))
@@ -140,10 +143,10 @@ public class RobotContainer {
 
     m_PS4Controller.triangle().onTrue(
       m_gyroscope.resetHeading()
-      .alongWith(m_robotDrive.resetSimPose())
+      .alongWith(m_drive.resetSimPose())
     );
 
-    m_PS4Controller.cross().onTrue(m_robotDrive.turn180());
+    m_PS4Controller.cross().onTrue(m_drive.turn180());
 
     m_PS4Controller.povUp().whileTrue(m_sysID.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
 
@@ -165,4 +168,12 @@ public class RobotContainer {
     // An example command will be run in autonomous
     return null;
   }
+
+  public DriveSubsystem getDrive() {
+        return m_drive;
+    }
+
+    public Vision getVision() {
+        return m_vision;
+    }
 }

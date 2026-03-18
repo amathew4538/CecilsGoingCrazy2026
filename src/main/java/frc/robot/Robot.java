@@ -13,10 +13,11 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.Vision;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -27,6 +28,8 @@ public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
+  private final Vision m_vision;
+  private final DriveSubsystem m_drive;
 
   boolean wasXbox;
 
@@ -64,6 +67,8 @@ public class Robot extends LoggedRobot {
     Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
 
     m_robotContainer = new RobotContainer();
+    m_drive = m_robotContainer.getDrive();
+    m_vision = m_robotContainer.getVision();
   }
 
   /**
@@ -146,7 +151,9 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically whilst in simulation. */
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    m_vision.updateSimPose(m_drive.getSimPose());
+  }
 
   /**
    * Cleans the logs up to the last {@code maxFiles} created

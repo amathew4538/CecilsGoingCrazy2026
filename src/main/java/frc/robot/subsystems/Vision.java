@@ -6,19 +6,28 @@ import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.simulation.PhotonCameraSim;
+import org.photonvision.simulation.SimCameraProperties;
+import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Vision extends SubsystemBase {
     private final PhotonCamera m_camera = new PhotonCamera("JerrysEye");
     private final PhotonPoseEstimator m_poseEstimator;
     private PhotonPipelineResult latestResult;
+
+    private VisionSystemSim m_visionSim;
+    private PhotonCameraSim m_cameraSim;
 
     // ! Change this!
     private static final Transform3d robotToCam = new Transform3d(
@@ -29,6 +38,20 @@ public class Vision extends SubsystemBase {
     public Vision() {
         AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
         m_poseEstimator = new PhotonPoseEstimator(layout, robotToCam);
+
+        if (RobotBase.isSimulation()) {
+            var cameraProp = new SimCameraProperties();
+            cameraProp.setCalibration(960, 720, Rotation2d.fromDegrees(90));
+            cameraProp.setCalibError(0.01, 0.10);
+            cameraProp.setFPS(20);
+
+            m_visionSim = new VisionSystemSim("main");
+            m_visionSim.addAprilTags(layout);
+
+            m_cameraSim = new PhotonCameraSim(m_camera, cameraProp);
+
+            m_visionSim.addCamera(m_cameraSim, robotToCam);
+        }
     }
 
     @Override
@@ -61,5 +84,14 @@ public class Vision extends SubsystemBase {
 
     public PhotonTrackedTarget getBestTarget() {
         return hasTargets() ? latestResult.getBestTarget() : null;
+    }
+
+    /**
+     * This method connects the physics sim pose to the vision sim
+     */
+    public void updateSimPose(Pose2d robotPose) {
+        if (RobotBase.isSimulation()) {
+            m_visionSim.update(robotPose);
+        }
     }
 }
