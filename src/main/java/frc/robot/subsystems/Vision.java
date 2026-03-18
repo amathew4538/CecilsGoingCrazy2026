@@ -35,7 +35,7 @@ public class Vision extends SubsystemBase {
 
     private static final Transform3d robotToCam = new Transform3d(
         new Translation3d(0.42, 0.0, 0.24), 
-        new Rotation3d(0, Math.toRadians(-45), 0)
+        new Rotation3d(0, 0, 0) // ! Change the height of the camera
     );
 
     public Vision(OdometryManager odometry) {
