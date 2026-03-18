@@ -11,6 +11,9 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 // import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import java.io.File;
+import java.util.Arrays;
+import java.util.Comparator;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -37,8 +40,11 @@ public class Robot extends LoggedRobot {
     if (Robot.isReal()) {
         Logger.recordMetadata("RobotMode", "REAL");
         String logPath = "/u/logs";
-        if (!new File(logPath).exists()) {logPath = "/home/lvuser/logs";}
-        // Logger.addDataReceiver(new WPILOGWriter(logPath)); // Log to a USB stick ("/U/logs")
+        if (!new File(logPath).exists()) logPath = "/home/lvuser/logs";
+
+        cleanOldLogs(logPath, 5);
+
+        Logger.addDataReceiver(new WPILOGWriter(logPath)); // Log to a USB stick ("/U/logs")
         Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
     } else {
         // ! Uncomment for log replay
@@ -141,4 +147,27 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {}
+
+  /**
+   * Cleans the logs up to the last {@code maxFiles} created
+   * @param path path to the logs
+   * @param maxFiles how many files left
+   */
+  private void cleanOldLogs(String path, int maxFiles) {
+    File dir = new File(path);
+    if (!dir.exists() || !dir.isDirectory()) return;
+
+    File[] files = dir.listFiles((d, name) -> name.endsWith(".wpilog"));
+    if (files != null && files.length > maxFiles) {
+        // Sort files by last modified date (oldest first)
+        Arrays.sort(files, Comparator.comparingLong(File::lastModified));
+
+        // Delete files from the start of the array until only maxFiles remain
+        for (int i = 0; i < files.length - maxFiles; i++) {
+            if (files[i].delete()) {
+                System.out.println("Deleted old log: " + files[i].getName());
+            }
+        }
+    }
+}
 }

@@ -108,5 +108,7 @@ public class RobotInfo extends SubsystemBase {
     Logger.recordOutput("Robot/AverageVelocity", avgVelocity);
 
     Logger.recordOutput("Robot/IsHighGear", DriveConstants.currentlyHighLogger);
+
+    Logger.recordOutput("Robot/LeftEncoder", DriveConstants.m_leftEncoder.getPosition());
   }
 }

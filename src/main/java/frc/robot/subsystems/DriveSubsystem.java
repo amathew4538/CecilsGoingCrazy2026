@@ -53,9 +53,9 @@ public class DriveSubsystem extends SubsystemBase {
   // TESTING: Odometry logging in AdvantageScope
   // TESTING: PathPlanner
   // TESTING: Spliting Methods Across Files
-
-  // TODO: Make PhotonVision
-  // TODO: Add PhotonVision info to logs
+  // TESTING: Make PhotonVision
+  // TESTING: Add PhotonVision info to logs
+  
   // TODO: Add PhotonVision to Choreo
   // TODO: PhotonVision Sim
 
@@ -213,8 +213,6 @@ public class DriveSubsystem extends SubsystemBase {
 
     m_autoShift.runAutoShift(this.getMetersPerSecond());
     // m_pneumatics.setHighGear(true);
-
-    // Logger.recordOutput("Robot/LeftEncoder", m_leftEncoder.getPosition());
 
     if (m_pneumatics.isHighGear()){
       DriveConstants.currentlyHighLogger = true;
