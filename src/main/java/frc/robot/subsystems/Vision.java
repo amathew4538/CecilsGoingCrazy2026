@@ -83,7 +83,10 @@ public class Vision extends SubsystemBase {
             }
 
             visionEstimation.ifPresent(estimation -> {
-                if (estimation.targetsUsed.get(0).getPoseAmbiguity() < 0.2) {
+                boolean isMultiTag = estimation.targetsUsed.size() > 1;
+                double ambiguity = estimation.targetsUsed.get(0).getPoseAmbiguity();
+
+                if (isMultiTag || (ambiguity > 0 && ambiguity < 0.2)) {
                     m_odometry.addVisionMeasurement(
                         estimation.estimatedPose.toPose2d(),
                         estimation.timestampSeconds
@@ -93,6 +96,7 @@ public class Vision extends SubsystemBase {
                     Logger.recordOutput("Robot/Vision/EstimatedPose3d", estimation.estimatedPose);
                     Logger.recordOutput("Robot/Vision/Timestamp", estimation.timestampSeconds);
                 }
+                Logger.recordOutput("Robot/Vision/Ambiguity", ambiguity);
             });
         }
     }

@@ -80,19 +80,23 @@ public class OdometryManager extends SubsystemBase{
 
     @Override
     public void periodic() {
+        Rotation2d heading = Rotation2d.fromDegrees(-m_gyro.getHeading());
+        double leftDist = DriveConstants.m_totalLeftDist;
+        double rightDist = DriveConstants.m_totalRightDist;
+
         m_odometry.update(
-            Rotation2d.fromDegrees(m_gyro.getHeading()),
-            DriveConstants.m_totalLeftDist,
-            DriveConstants.m_totalRightDist
+            heading,
+            leftDist,
+            rightDist
         );
         m_poseEstimator.update(
-            Rotation2d.fromDegrees(m_gyro.getHeading()),
-            DriveConstants.m_totalLeftDist,
-            DriveConstants.m_totalRightDist
+            heading,
+            leftDist,
+            rightDist
         );
         DriveConstants.m_Field2d.setRobotPose(getFinalPose());
 
-        Logger.recordOutput("Odometry/FinalPose", getFinalPose());
-        Logger.recordOutput("Odometry/FinalPose3d", new Pose3d(getFinalPose()));
+        Logger.recordOutput("Robot/Drive/FinalPose", getFinalPose());
+        Logger.recordOutput("Robot/Drive/FinalPose3d", new Pose3d(getFinalPose()));
     }
 }

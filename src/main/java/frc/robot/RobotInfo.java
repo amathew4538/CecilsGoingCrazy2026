@@ -62,9 +62,10 @@ public class RobotInfo extends SubsystemBase {
       .withWidget(BuiltInWidgets.kBooleanBox)
       .getEntry();
 
-    m_gyroTab.add("Robot Heading", m_gyro)
+    m_gyroTab.add("Robot Heading", m_gyro.getHeading())
       .withWidget(BuiltInWidgets.kGyro)
-      .withProperties(Map.of("Starting angle", 0));
+      .withProperties(Map.of("Starting angle", 0))
+      .getEntry();
 
     m_gyroTab.add("Reset Gyro", m_gyro.resetHeading())
       .withWidget(BuiltInWidgets.kCommand)
@@ -110,10 +111,11 @@ public class RobotInfo extends SubsystemBase {
       Logger.recordOutput("Robot/Drive/Pose3d", new edu.wpi.first.math.geometry.Pose3d(m_odometry.getPose()));
     }
     Logger.recordOutput("Robot/Drive/AverageVelocity", avgVelocity);
+    Logger.recordOutput("Robot/Drive/LeftEncoder", DriveConstants.m_leftEncoder.getPosition());
+    Logger.recordOutput("Robot/Drive/RightEncoder", DriveConstants.m_rightEncoder.getPosition());
 
     Logger.recordOutput("Robot/Pneumatics/AutoShiftEnabled", DriveConstants.isAutoShiftEnabled);
     Logger.recordOutput("Robot/Pneumatics/IsHighGear", DriveConstants.currentlyHighLogger);
-    Logger.recordOutput("Robot/Pneumatics/LeftEncoder", DriveConstants.m_leftEncoder.getPosition());
 
     Logger.recordOutput("Robot/Gyro/Heading", m_gyro.getHeading());
 
