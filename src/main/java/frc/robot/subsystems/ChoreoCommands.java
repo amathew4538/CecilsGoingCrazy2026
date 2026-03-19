@@ -1,8 +1,11 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.Logger;
+import choreo.Choreo;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.DifferentialSample;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -23,7 +26,7 @@ public class ChoreoCommands {
     this.m_odometry = odometry;
 
     autoFactory = new AutoFactory(
-      m_odometry::getPose, // A function that returns the current robot pose
+      m_odometry::getFinalPose, // A function that returns the current robot pose
       m_odometry::resetOdometry, // A function that resets the current robot pose to the provided Pose2d
       this::followTrajectory, // The drive subsystem trajectory follower
       true, // If alliance flipping should be enabled
@@ -73,7 +76,10 @@ public class ChoreoCommands {
   */
   public void followTrajectory(DifferentialSample sample) {
     DriveConstants.isAutoShiftEnabled = false;
-    Pose2d pose = m_odometry.getPose();
+    Pose2d pose = m_odometry.getFinalPose();
+
+    Logger.recordOutput("Robot/Choreo/TargetPose", sample.getPose());
+    Logger.recordOutput("Robot/Choreo/TargetPose3d", new Pose3d(sample.getPose()));
 
     ChassisSpeeds ff = sample.getChassisSpeeds();
 
@@ -91,10 +97,41 @@ public class ChoreoCommands {
    * A command to test choreo
    * @return a command that resets odometry then runs a choreo path
   */
-  public Command testChoreo(){
+  public Command testChoreo() {
     return Commands.sequence(
-      autoFactory.resetOdometry("NewPath"),
-      autoFactory.trajectoryCmd("NewPath")
+        Commands.runOnce(() -> {
+            var opt = Choreo.loadTrajectory("NewPath");
+            opt.ifPresent(traj -> Logger.recordOutput("Robot/Choreo/Trajectory", traj.getPoses()));
+        }),
+        autoFactory.resetOdometry("NewPath"),
+        autoFactory.trajectoryCmd("NewPath")
     );
   }
+
+  /**
+   * Drive to the start of a choreo path
+   * @param targetPose the start pose
+   * @return the command to get get to the start pose
+   */
+  public Command driveToPose(Pose2d targetPose) {
+    System.out.println("Driving to pose");
+    return Commands.run(() -> {
+        Pose2d currentPose = m_odometry.getFinalPose();
+
+        ChassisSpeeds speeds = DriveConstants.controller.calculate(
+            currentPose,
+            targetPose,
+            0,
+            0
+        );
+        
+        choreoDriveCS(speeds);
+    }, m_drive)
+    .until(() -> {
+        double dist = m_odometry.getFinalPose().getTranslation().getDistance(targetPose.getTranslation());
+        double angle = Math.abs(m_odometry.getFinalPose().getRotation().minus(targetPose.getRotation()).getDegrees());
+        return dist < 0.05 && angle < 2.0;
+    })
+    .finallyDo(() -> choreoDriveCS(new ChassisSpeeds()));
+}
 }

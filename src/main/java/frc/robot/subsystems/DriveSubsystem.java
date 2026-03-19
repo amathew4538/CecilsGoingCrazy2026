@@ -47,19 +47,21 @@ public class DriveSubsystem extends SubsystemBase {
   // DONE: Delta Odometry
   // ? What does delta odometry? It prevents odometry jumping with gear switches
   // DONE: Create Constants In Seperate File
+ // DONE: PhotonVision Sim
+  // DONE: Spliting Methods Across Files
+  // DONE: Make PhotonVision
+  // DONE: Add PhotonVision info to logs
+
 
   // TESTING: FeedForward
   // ? What is feedfoward? It makes the Choreo trajectory slightly more accurate based on SysID
-  // TESTING: Odometry logging in AdvantageScope
   // TESTING: PathPlanner
-  // TESTING: Spliting Methods Across Files
-  // TESTING: Make PhotonVision
-  // TESTING: Add PhotonVision info to logs
 
   // TODO: Add PhotonVision to Choreo
-  // TODO: PhotonVision Sim
 
   public DriveSubsystem(Gyroscope gyro, Pneumatics pneumatics, AutoShift autoShift) {
+    m_drive.setSafetyEnabled(false);
+
     this.m_gyro = gyro;
     this.m_pneumatics = pneumatics;
     this.m_autoShift = autoShift;
@@ -186,7 +188,13 @@ public class DriveSubsystem extends SubsystemBase {
 
     m_driveSim.setCurrentGearing(currentRatio);
 
-    m_driveSim.setInputs(DriveConstants.m_leftLeader.get() * 12.0, DriveConstants.m_rightLeader.get() * 12.0);
+    double leftVolts = DriveConstants.m_leftLeader.get() * 12.0;
+    double rightVolts = DriveConstants.m_rightLeader.get() * 12.0;
+
+    if (Math.abs(leftVolts) < 0.01) leftVolts = DriveConstants.m_leftLeader.getAppliedOutput() * 12.0;
+    if (Math.abs(rightVolts) < 0.01) rightVolts = DriveConstants.m_rightLeader.getAppliedOutput() * 12.0;
+
+    m_driveSim.setInputs(leftVolts, rightVolts);
     m_driveSim.update(0.020);
 
     DriveConstants.m_leftEncoder.setPosition(m_driveSim.getLeftPositionMeters());

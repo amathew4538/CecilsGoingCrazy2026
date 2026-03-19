@@ -27,7 +27,14 @@ public class RobotInfo extends SubsystemBase {
   private GenericEntry m_pressureFull;
   private GenericEntry m_gear;
 
-  public RobotInfo(DriveSubsystem drive, Gyroscope gyro, Pneumatics pneumatics, AutoShift autoShift, OdometryManager odometry, Vision vision) {
+  public RobotInfo(
+      DriveSubsystem drive,
+      Gyroscope gyro,
+      Pneumatics pneumatics,
+      AutoShift autoShift,
+      OdometryManager odometry,
+      Vision vision
+    ) {
     this.m_drive = drive;
     this.m_gyro = gyro;
     this.m_pneumatics = pneumatics;

@@ -2,11 +2,13 @@ package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
 
@@ -20,17 +22,19 @@ public class OdometryManager extends SubsystemBase{
         this.m_gyro = gyro;
 
         this.m_odometry = new DifferentialDriveOdometry(
-          Rotation2d.fromDegrees(m_gyro.getHeading()),
+          Rotation2d.fromDegrees(-m_gyro.getHeading()),
           0.0,
           0.0
         );
 
         this.m_poseEstimator = new DifferentialDrivePoseEstimator(
             DriveConstants.m_kinematics,
-            Rotation2d.fromDegrees(m_gyro.getHeading()),
+            Rotation2d.fromDegrees(-m_gyro.getHeading()),
             0.0,
             0.0,
-            new Pose2d()
+            new Pose2d(),
+            VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(1.0)), // State std devs (Trust wheels more)
+            VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(30.0))   // Vision std devs (Trust vision less)
         );
     }
 
@@ -57,8 +61,8 @@ public class OdometryManager extends SubsystemBase{
         DriveConstants.m_totalLeftDist = 0;
         DriveConstants.m_totalRightDist = 0;
 
-        m_odometry.resetPosition(Rotation2d.fromDegrees(m_gyro.getHeading()), 0, 0, pose);
-        m_poseEstimator.resetPosition(Rotation2d.fromDegrees(m_gyro.getHeading()), 0, 0, pose);
+        m_odometry.resetPosition(Rotation2d.fromDegrees(-m_gyro.getHeading()), 0, 0, pose);
+        m_poseEstimator.resetPosition(Rotation2d.fromDegrees(-m_gyro.getHeading()), 0, 0, pose);
     }
 
     /**
