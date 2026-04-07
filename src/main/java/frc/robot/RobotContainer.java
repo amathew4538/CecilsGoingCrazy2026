@@ -87,7 +87,7 @@ public class RobotContainer {
     else {
       m_drive.setDefaultCommand(
           m_drive.run(() -> m_drive.arcadeDrive(
-              -m_XboxController.getLeftY(),
+              m_XboxController.getLeftY(),
               m_XboxController.getRightX()
           ))
       );

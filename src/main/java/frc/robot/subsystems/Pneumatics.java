@@ -13,7 +13,7 @@ public class Pneumatics extends SubsystemBase {
     private final PneumaticHub m_pneumaticHub = new PneumaticHub(5);
 
     private final DoubleSolenoid m_solenoidLeft = m_pneumaticHub.makeDoubleSolenoid(0, 1);
-    private final DoubleSolenoid m_solenoidRight = m_pneumaticHub.makeDoubleSolenoid(14, 15);
+    private final DoubleSolenoid m_solenoidRight = m_pneumaticHub.makeDoubleSolenoid(2, 6);
 
     /**
      * The main class used in the Pneumatics. Used in {@link frc.robot.RobotContainer RobotContainer}.

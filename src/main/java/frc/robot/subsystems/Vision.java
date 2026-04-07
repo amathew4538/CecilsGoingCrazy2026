@@ -34,7 +34,7 @@ public class Vision extends SubsystemBase {
     private PhotonCameraSim m_cameraSim;
 
     private static final Transform3d robotToCam = new Transform3d(
-        new Translation3d(0.42, 0.0, 0.24),
+        new Translation3d(0.37, 0.06, 0.43),
         new Rotation3d(0, 0, 0) // ! Change the height of the camera
     );
 
