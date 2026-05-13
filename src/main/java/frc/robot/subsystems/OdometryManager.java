@@ -90,13 +90,13 @@ public class OdometryManager extends SubsystemBase{
 
         m_odometry.update(
             heading,
-            leftDist,
-            rightDist
+            -leftDist,
+            -rightDist
         );
         m_poseEstimator.update(
             heading,
-            leftDist,
-            rightDist
+            -leftDist,
+            -rightDist
         );
         DriveConstants.m_Field2d.setRobotPose(getFinalPose());
 

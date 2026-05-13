@@ -103,8 +103,9 @@ public class ChoreoCommands {
             var opt = Choreo.loadTrajectory("NewPath");
             opt.ifPresent(traj -> Logger.recordOutput("Robot/Choreo/Trajectory", traj.getPoses()));
         }),
-        autoFactory.resetOdometry("NewPath"),
-        autoFactory.trajectoryCmd("NewPath")
+        driveToPose(m_odometry.getFinalPose())
+        // autoFactory.resetOdometry("NewPath"),
+        // autoFactory.trajectoryCmd("NewPath")
     );
   }
 
