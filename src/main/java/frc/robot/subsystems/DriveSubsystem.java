@@ -46,9 +46,9 @@ public class DriveSubsystem extends SubsystemBase {
   // DONE: SysID
   // DONE: Add Current Limits
   // DONE: Delta Odometry
-  // ? What does delta odometry? It prevents odometry jumping with gear switches
+  // ? What does delta odometry do? It prevents odometry jumping with gear switches
   // DONE: Create Constants In Seperate File
- // DONE: PhotonVision Sim
+  // DONE: PhotonVision Sim
   // DONE: Spliting Methods Across Files
   // DONE: Make PhotonVision
   // DONE: Add PhotonVision info to logs
@@ -57,8 +57,6 @@ public class DriveSubsystem extends SubsystemBase {
   // TESTING: FeedForward
   // ? What is feedfoward? It makes the Choreo trajectory slightly more accurate based on SysID
   // TESTING: PathPlanner
-
-  // TODO: Add PhotonVision to Choreo
 
   public DriveSubsystem(Gyroscope gyro, Pneumatics pneumatics, AutoShift autoShift) {
     m_drive.setSafetyEnabled(false);

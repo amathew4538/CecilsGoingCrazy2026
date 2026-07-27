@@ -35,8 +35,11 @@ public class Vision extends SubsystemBase {
 
     private static final Transform3d robotToCam = new Transform3d(
         new Translation3d(0.37, 0.06, 0.43),
-        new Rotation3d(0, 0, 0) // ! Change the height of the camera
+        new Rotation3d(0, 0, 0) // ! Change the position of the camera!
     );
+
+    // TODO: Add Vision View to 
+    // TODO: Add PhotonVision to Choreo
 
     public Vision(OdometryManager odometry) {
         this.m_odometry = odometry;
@@ -101,10 +104,18 @@ public class Vision extends SubsystemBase {
         }
     }
 
+    /**
+     * Returns whether the camera has tag within view
+     * @return whether targets are there, bool
+     */
     public boolean hasTargets() {
         return latestResult != null && latestResult.hasTargets();
     }
 
+    /**
+     * Returns the best target in view
+     * @return the best target in view, PhotonTrackedTarget
+     */
     public PhotonTrackedTarget getBestTarget() {
         return hasTargets() ? latestResult.getBestTarget() : null;
     }

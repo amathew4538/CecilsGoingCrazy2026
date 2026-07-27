@@ -64,8 +64,10 @@ public class RobotContainer {
     // Clear existing buttons if necessary, though this is tricky with Triggers
     if (DriverStation.getJoystickIsXbox(0)) {
         configureXboxBindings();
+        System.out.println("xbox");
     } else {
         configurePS4Bindings();
+        System.out.println("ps4");
     }
   }
 
@@ -75,6 +77,7 @@ public class RobotContainer {
   */
   private void configureXboxBindings() {
     final CommandXboxController m_XboxController = new CommandXboxController(0);
+    System.out.println("xbox created");
 
     if (Robot.isSimulation()){
       m_drive.setDefaultCommand(
@@ -110,6 +113,8 @@ public class RobotContainer {
     m_XboxController.povRight().whileTrue(m_sysID.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     m_XboxController.b().onTrue(m_choreo.testChoreo());
+
+    System.out.println("xbox done");
   }
 
   /**
@@ -118,6 +123,7 @@ public class RobotContainer {
   */
   private void configurePS4Bindings() {
     final CommandPS4Controller m_PS4Controller = new CommandPS4Controller(0);
+    System.out.println("ps4 created");
 
     if (Robot.isSimulation()){
       m_drive.setDefaultCommand(
@@ -137,14 +143,14 @@ public class RobotContainer {
       );
     }
 
-    m_PS4Controller.R1().onTrue(m_pneumatics.toggleSolenoids());
+    m_PS4Controller.button(5).onTrue(m_pneumatics.toggleSolenoids()); // R1
 
-    m_PS4Controller.triangle().onTrue(
+    m_PS4Controller.button(3).onTrue( // Triangle
       m_gyroscope.resetHeading()
       .alongWith(m_drive.resetSimPose())
     );
 
-    m_PS4Controller.cross().onTrue(m_drive.turn180());
+    m_PS4Controller.button(1).onTrue(m_drive.turn180()); // Cross
 
     m_PS4Controller.povUp().whileTrue(m_sysID.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
 
@@ -154,7 +160,9 @@ public class RobotContainer {
 
     m_PS4Controller.povRight().whileTrue(m_sysID.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    m_PS4Controller.circle().onTrue(m_choreo.testChoreo());
+    m_PS4Controller.button(2).onTrue(m_choreo.testChoreo()); // Circle
+
+    System.out.println("ps4 done");
   }
 
   /**

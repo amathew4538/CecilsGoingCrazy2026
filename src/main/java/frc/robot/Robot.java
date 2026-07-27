@@ -42,7 +42,7 @@ public class Robot extends LoggedRobot {
 
     if (Robot.isReal()) {
         Logger.recordMetadata("RobotMode", "REAL");
-        String logPath = "/u/logs";
+        String logPath = "/U/logs";
         if (!new File(logPath).exists()) logPath = "/home/lvuser/logs";
 
         cleanOldLogs(logPath, 5);
@@ -117,6 +117,7 @@ public class Robot extends LoggedRobot {
     // this line or comment it out.
 
     wasXbox = DriverStation.getJoystickIsXbox(0);
+    System.out.println(wasXbox);
     m_robotContainer.updateControllerBindings();
 
     if (m_autonomousCommand != null) {
@@ -128,10 +129,12 @@ public class Robot extends LoggedRobot {
   @Override
   public void teleopPeriodic() {
     boolean isXbox = DriverStation.getJoystickIsXbox(0);
+    System.out.println(isXbox);
 
     if (isXbox != wasXbox) {
       m_robotContainer.updateControllerBindings();
       wasXbox = isXbox;
+      System.out.println(wasXbox);
     }
   }
 
