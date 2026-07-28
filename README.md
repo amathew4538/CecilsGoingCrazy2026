@@ -24,6 +24,7 @@ The main features include:
 - 180° turn
 - Java Docs
 - Elastic
+- AdvantageScope
 
 The W.I.P. features are:
 
