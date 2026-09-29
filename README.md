@@ -1,6 +1,6 @@
 # Cecil is crazy
 
-The 2026 version of the code created for Team 5002's test tank drive robot.
+The 2026 version of the code created for Jerry 2, Team 5002's test tank drive robot.
 
 By amathew4538 and cecilj08-ux.
 
@@ -17,8 +17,8 @@ The main features include:
 - PhotonVision
 - Shifting
 - Auto-shifting
-- (Bad) Odometry
-- (Bad) PS4/Xbox controller support
+- (Rudimentary) Odometry
+- PS4/Xbox controller support
 - Gyroscope
 - SysID
 - 180° turn
